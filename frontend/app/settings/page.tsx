@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Settings, Cpu, ShieldCheck, DollarSign, Save, Sliders, CheckCircle2 } from "lucide-react";
 
 export default function SettingsPage() {
-  const [provider, setProvider] = useState("anthropic");
-  const [model, setModel] = useState("claude-sonnet-5");
+  const [provider, setProvider] = useState("gemini");
+  const [model, setModel] = useState("gemini-2.5-flash");
   const [severityThreshold, setSeverityThreshold] = useState("low");
   const [maxCost, setMaxCost] = useState("2.00");
   const [saved, setSaved] = useState(false);
@@ -68,8 +68,7 @@ export default function SettingsPage() {
                     onChange={(e) => setProvider(e.target.value)}
                     className="w-full h-9 px-3 bg-surface border border-line rounded-md text-xs text-ink focus:outline-none focus:border-accent-line font-mono"
                   >
-                    <option value="anthropic">Anthropic Claude (Recommended)</option>
-                    <option value="openai">OpenAI (GPT-4o / O3)</option>
+                    <option value="gemini">Google Gemini (Recommended)</option>
                     <option value="groq">Groq Llama-3 (Fast Inference)</option>
                     <option value="local">Local Ollama / vLLM</option>
                     <option value="heuristic">Offline Heuristic Engine (No API Key)</option>

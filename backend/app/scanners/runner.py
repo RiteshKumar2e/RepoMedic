@@ -180,7 +180,18 @@ def run_tool(
 
 def _sanitised_env(allow_network: bool) -> dict[str, str]:
     """Strip credentials from the environment handed to external tools."""
-    blocked_prefixes = ("GITHUB_", "ANTHROPIC_", "OPENAI_", "GROQ_", "DATABASE_", "REDIS_")
+    # Covers providers we no longer configure too: the ambient shell may still
+    # carry those keys, and scanners run against untrusted repository code.
+    blocked_prefixes = (
+        "GITHUB_",
+        "GEMINI_",
+        "GOOGLE_",
+        "GROQ_",
+        "ANTHROPIC_",
+        "OPENAI_",
+        "DATABASE_",
+        "REDIS_",
+    )
     blocked_exact = {"JWT_SECRET", "ENCRYPTION_KEY", "AWS_SECRET_ACCESS_KEY", "AWS_ACCESS_KEY_ID"}
     env = {
         key: value

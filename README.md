@@ -169,9 +169,9 @@ graph TB
 ### AI & Analysis
 | Technology | Purpose |
 |---|---|
-| Anthropic Claude | Primary LLM |
-| OpenAI-compatible APIs | Alternative LLM |
+| Google Gemini | Primary LLM |
 | Groq | Fast inference |
+| OpenAI-compatible APIs | Local models (Ollama, vLLM, LM Studio) |
 | Heuristic engine | Offline fallback |
 | Ruff, Bandit, Mypy | Python analysis |
 | ESLint, tsc | JS/TS analysis |
@@ -287,10 +287,11 @@ See [backend/.env.example](backend/.env.example) for the complete list. Key vari
 | `JWT_SECRET` | Session signing key |
 | `GITHUB_CLIENT_ID` | GitHub OAuth app |
 | `GITHUB_CLIENT_SECRET` | GitHub OAuth secret |
-| `ANTHROPIC_API_KEY` | Claude API key |
+| `GEMINI_API_KEY` | Google Gemini API key |
+| `GROQ_API_KEY` | Groq API key |
 | `REDIS_URL` | Redis connection |
 | `DEMO_MODE` | Enable seeded demo data |
-| `DEFAULT_LLM_PROVIDER` | `anthropic`, `openai`, `groq`, `heuristic` |
+| `DEFAULT_LLM_PROVIDER` | `gemini`, `groq`, `local`, `heuristic` |
 
 ---
 

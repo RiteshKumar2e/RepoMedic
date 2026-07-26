@@ -1,8 +1,10 @@
 """Concrete LLM providers.
 
-* :class:`AnthropicProvider` — Claude Messages API.
-* :class:`OpenAICompatibleProvider` — OpenAI, Groq, and any local server that
-  speaks ``/chat/completions`` (Ollama, vLLM, LM Studio, llama.cpp).
+* :class:`GeminiProvider` — Google Gemini ``generateContent`` API.
+* :class:`OpenAICompatibleProvider` — Groq and any local server that speaks
+  ``/chat/completions`` (Ollama, vLLM, LM Studio, llama.cpp). The name refers to
+  the wire protocol, which those vendors implement; OpenAI itself is not a
+  configured provider.
 * :class:`HeuristicProvider` — deterministic offline fallback. It is **not** a
   language model: it applies cross-file heuristics the AST rules do not cover
   and returns the same JSON contract, so the pipeline stays exercisable with no
@@ -31,12 +33,20 @@ logger = get_logger(__name__)
 _TIMEOUT = httpx.Timeout(120.0, connect=10.0)
 
 
-class AnthropicProvider:
-    name = "anthropic"
+class GeminiProvider:
+    """Google Gemini via the native ``generateContent`` endpoint.
 
-    def __init__(self, model: str = "claude-sonnet-5", api_key: str = "") -> None:
+    The native endpoint is used rather than Gemini's OpenAI compatibility shim
+    because it reports real token counts in ``usageMetadata``, which the cost
+    budget depends on.
+    """
+
+    name = "gemini"
+
+    def __init__(self, model: str = "gemini-2.5-flash", api_key: str = "") -> None:
         self.model = model
-        self._api_key = api_key or settings.anthropic_api_key
+        self._api_key = api_key or settings.gemini_api_key
+        self._base_url = settings.gemini_base_url.rstrip("/")
 
     def available(self) -> bool:
         return bool(self._api_key)
@@ -50,46 +60,61 @@ class AnthropicProvider:
         temperature: float = 0.0,
     ) -> LLMResponse:
         if not self.available():
-            raise LLMUnavailable("ANTHROPIC_API_KEY is not configured")
+            raise LLMUnavailable("GEMINI_API_KEY is not configured")
 
         payload: dict[str, Any] = {
-            "model": self.model,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-            "system": system,
-            "messages": [{"role": m.role, "content": m.content} for m in messages],
+            "systemInstruction": {"parts": [{"text": system}]},
+            "contents": [
+                # Gemini names the assistant turn "model", not "assistant".
+                {
+                    "role": "model" if m.role == "assistant" else "user",
+                    "parts": [{"text": m.content}],
+                }
+                for m in messages
+            ],
+            "generationConfig": {
+                "temperature": temperature,
+                "maxOutputTokens": max_tokens,
+                "responseMimeType": "application/json",
+            },
         }
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
             response = await client.post(
-                "https://api.anthropic.com/v1/messages",
+                f"{self._base_url}/models/{self.model}:generateContent",
                 headers={
-                    "x-api-key": self._api_key,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
+                    "x-goog-api-key": self._api_key,
+                    "Content-Type": "application/json",
                 },
                 json=payload,
             )
         if response.status_code >= 400:
             raise LLMUnavailable(
-                f"Anthropic API error {response.status_code}",
+                f"Gemini API error {response.status_code}",
                 details={"body": response.text[:400]},
             )
         data = response.json()
-        text = "".join(block.get("text", "") for block in data.get("content", []))
-        usage = data.get("usage", {})
+        candidates = data.get("candidates") or [{}]
+        parts = (candidates[0].get("content") or {}).get("parts") or []
+        # Thinking models interleave "thought" parts; only answer parts are text.
+        text = "".join(p.get("text", "") for p in parts if not p.get("thought"))
+        usage = data.get("usageMetadata", {})
         return LLMResponse(
             text=text,
             provider=self.name,
-            model=data.get("model", self.model),
-            prompt_tokens=int(usage.get("input_tokens", 0)),
-            completion_tokens=int(usage.get("output_tokens", 0)),
-            stop_reason=data.get("stop_reason", ""),
+            model=data.get("modelVersion", self.model),
+            prompt_tokens=int(usage.get("promptTokenCount", 0)),
+            completion_tokens=int(usage.get("candidatesTokenCount", 0)),
+            stop_reason=candidates[0].get("finishReason", ""),
             raw=data,
         )
 
 
 class OpenAICompatibleProvider:
-    """Works with OpenAI, Groq and any local OpenAI-shaped server."""
+    """Works with Groq and any local OpenAI-shaped server.
+
+    "OpenAI-compatible" names the ``/chat/completions`` wire protocol, not the
+    vendor — OpenAI itself is not a configured provider.
+    """
 
     def __init__(self, *, name: str, model: str, api_key: str, base_url: str) -> None:
         self.name = name

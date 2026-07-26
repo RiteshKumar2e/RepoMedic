@@ -14,7 +14,7 @@ from app.core.config import settings
 from app.core.logging import get_logger
 from app.llm.base import LLMProvider
 from app.llm.providers import (
-    AnthropicProvider,
+    GeminiProvider,
     HeuristicProvider,
     OpenAICompatibleProvider,
 )
@@ -22,8 +22,7 @@ from app.llm.providers import (
 logger = get_logger(__name__)
 
 DEFAULT_MODELS = {
-    "anthropic": "claude-sonnet-5",
-    "openai": "gpt-4o-mini",
+    "gemini": "gemini-2.5-flash",
     "groq": "llama-3.3-70b-versatile",
     "local": "local",
     "heuristic": "heuristic",
@@ -32,15 +31,8 @@ DEFAULT_MODELS = {
 
 def _build(provider: str, model: str | None) -> LLMProvider | None:
     resolved_model = model or DEFAULT_MODELS.get(provider, settings.default_llm_model)
-    if provider == "anthropic":
-        return AnthropicProvider(model=resolved_model, api_key=settings.anthropic_api_key)
-    if provider == "openai":
-        return OpenAICompatibleProvider(
-            name="openai",
-            model=resolved_model,
-            api_key=settings.openai_api_key,
-            base_url=settings.openai_base_url,
-        )
+    if provider == "gemini":
+        return GeminiProvider(model=resolved_model, api_key=settings.gemini_api_key)
     if provider == "groq":
         return OpenAICompatibleProvider(
             name="groq",
@@ -66,8 +58,7 @@ def get_provider(
     candidates = [
         preferred,
         settings.default_llm_provider,
-        "anthropic",
-        "openai",
+        "gemini",
         "groq",
         "local",
     ]
@@ -89,7 +80,7 @@ def get_provider(
 def provider_status() -> dict[str, bool]:
     """Which providers are usable right now (surfaced in Settings)."""
     status: dict[str, bool] = {}
-    for name in ("anthropic", "openai", "groq", "local", "heuristic"):
+    for name in ("gemini", "groq", "local", "heuristic"):
         provider = _build(name, None)
         status[name] = bool(provider and provider.available())
     return status

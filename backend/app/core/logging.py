@@ -18,6 +18,7 @@ _REDACTION_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"sk-(?:proj-)?[A-Za-z0-9_\-]{20,}"), "<redacted:openai-key>"),
     (re.compile(r"sk-ant-[A-Za-z0-9_\-]{20,}"), "<redacted:anthropic-key>"),
     (re.compile(r"gsk_[A-Za-z0-9]{20,}"), "<redacted:groq-key>"),
+    (re.compile(r"AIza[0-9A-Za-z_\-]{35}"), "<redacted:google-key>"),
     (re.compile(r"eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}"), "<redacted:jwt>"),
     (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]+?-----END [A-Z ]*PRIVATE KEY-----"), "<redacted:private-key>"),
 ]

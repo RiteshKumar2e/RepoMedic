@@ -64,13 +64,12 @@ class Settings(BaseSettings):
     github_api_url: str = "https://api.github.com"
 
     # ---- LLM -------------------------------------------------------------
-    anthropic_api_key: str = ""
-    openai_api_key: str = ""
-    openai_base_url: str = "https://api.openai.com/v1"
+    gemini_api_key: str = ""
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     groq_api_key: str = ""
     local_llm_base_url: str = "http://localhost:11434/v1"
     default_llm_provider: str = "heuristic"
-    default_llm_model: str = "claude-sonnet-5"
+    default_llm_model: str = "gemini-2.5-flash"
 
     # ---- Queue -----------------------------------------------------------
     redis_url: str = ""
@@ -173,8 +172,7 @@ class Settings(BaseSettings):
 
     def llm_api_key(self, provider: str) -> str:
         return {
-            "anthropic": self.anthropic_api_key,
-            "openai": self.openai_api_key,
+            "gemini": self.gemini_api_key,
             "groq": self.groq_api_key,
             "local": "local",
             "heuristic": "heuristic",

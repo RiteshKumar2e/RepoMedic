@@ -62,17 +62,16 @@ class LLMProvider(Protocol):
 # Update as provider pricing changes; unknown models fall back to a mid estimate.
 # --------------------------------------------------------------------------- #
 PRICING: dict[str, tuple[float, float]] = {
-    "claude-opus-5": (15.0, 75.0),
-    "claude-sonnet-5": (3.0, 15.0),
-    "claude-haiku-4-5": (1.0, 5.0),
-    "gpt-4o": (2.5, 10.0),
-    "gpt-4o-mini": (0.15, 0.6),
+    "gemini-2.5-pro": (1.25, 10.0),
+    "gemini-2.5-flash": (0.30, 2.50),
+    "gemini-2.5-flash-lite": (0.10, 0.40),
+    "gemini-2.0-flash": (0.10, 0.40),
     "llama-3.3-70b-versatile": (0.59, 0.79),
     "llama-3.1-8b-instant": (0.05, 0.08),
     "local": (0.0, 0.0),
     "heuristic": (0.0, 0.0),
 }
-_DEFAULT_PRICE = (3.0, 15.0)
+_DEFAULT_PRICE = (1.25, 10.0)
 
 
 def estimate_cost(model: str, prompt_tokens: int, completion_tokens: int) -> float:
