@@ -2,6 +2,21 @@ import type { SSEProgressEvent } from "@/types/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
+const TOKEN_KEY = "repomedic_token";
+
+export function setAuthToken(token: string) {
+  if (typeof window !== "undefined") localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearAuthToken() {
+  if (typeof window !== "undefined") localStorage.removeItem(TOKEN_KEY);
+}
+
+export function getAuthToken(): string | null {
+  if (typeof window !== "undefined") return localStorage.getItem(TOKEN_KEY);
+  return null;
+}
+
 export class APIError extends Error {
   constructor(public status: number, public code: string, message: string, public details?: any) {
     super(message);
@@ -17,10 +32,15 @@ async function fetcher<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers.set("Content-Type", "application/json");
   }
 
+  const token = getAuthToken();
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
   const res = await fetch(url, {
     ...options,
     headers,
-    credentials: "omit", // Using token/session headers
+    credentials: "include",
   });
 
   if (!res.ok) {
