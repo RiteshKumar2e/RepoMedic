@@ -1,0 +1,44 @@
+# ---- Web framework ----
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-multipart==0.0.20
+sse-starlette==2.2.1
+
+# ---- Database (Turso / libSQL over SQLAlchemy) ----
+sqlmodel==0.0.22
+SQLAlchemy==2.0.36
+alembic==1.14.0
+sqlalchemy-libsql==0.1.0
+libsql-client==0.3.1
+
+# ---- HTTP / auth / crypto ----
+httpx==0.28.1
+PyJWT==2.10.1
+cryptography==44.0.0
+
+# ---- Queue / cache ----
+redis==5.2.1
+dramatiq[redis]==1.17.1
+
+# ---- Parsing / analysis ----
+tree-sitter==0.23.2
+tree-sitter-python==0.23.6
+tree-sitter-javascript==0.23.1
+tree-sitter-typescript==0.23.2
+radon==6.0.1
+
+# ---- Observability ----
+structlog==24.4.0
+
+# ---- Deterministic scanners (invoked as subprocesses) ----
+ruff==0.8.6
+bandit==1.8.0
+mypy==1.14.1
+
+# ---- Testing / dev ----
+pytest==8.3.4
+pytest-asyncio==0.25.2
+respx==0.22.0
+coverage==7.6.10

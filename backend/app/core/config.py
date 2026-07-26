@@ -1,0 +1,189 @@
+"""Typed application settings loaded from the environment.
+
+Every runtime knob lives here so services never read ``os.environ`` directly.
+"""
+
+from __future__ import annotations
+
+import base64
+import hashlib
+from enum import Enum
+from functools import lru_cache
+from pathlib import Path
+from typing import Literal
+
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+
+
+class SandboxMode(str, Enum):
+    DOCKER = "docker"
+    SUBPROCESS = "subprocess"
+    DISABLED = "disabled"
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=(BACKEND_ROOT / ".env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=False,
+    )
+
+    # ---- Application -----------------------------------------------------
+    app_env: Literal["development", "test", "staging", "production"] = "development"
+    app_name: str = "RepoMedic"
+    app_url: str = "http://localhost:3000"
+    api_url: str = "http://localhost:8000"
+    frontend_url: str = "http://localhost:3000"
+    api_v1_prefix: str = "/api/v1"
+    log_level: str = "INFO"
+    demo_mode: bool = True
+
+    # ---- Database --------------------------------------------------------
+    database_url: str = ""
+    database_auth_token: str = ""
+
+    # ---- Secrets ---------------------------------------------------------
+    jwt_secret: str = ""
+    encryption_key: str = ""
+    jwt_expire_minutes: int = 720
+    cookie_name: str = "repomedic_session"
+    cookie_secure: bool = False
+    cookie_domain: str = ""
+
+    # ---- GitHub ----------------------------------------------------------
+    github_client_id: str = ""
+    github_client_secret: str = ""
+    github_oauth_scopes: str = "read:user,user:email,repo"
+    github_app_id: str = ""
+    github_private_key: str = ""
+    github_webhook_secret: str = ""
+    github_api_url: str = "https://api.github.com"
+
+    # ---- LLM -------------------------------------------------------------
+    anthropic_api_key: str = ""
+    openai_api_key: str = ""
+    openai_base_url: str = "https://api.openai.com/v1"
+    groq_api_key: str = ""
+    local_llm_base_url: str = "http://localhost:11434/v1"
+    default_llm_provider: str = "heuristic"
+    default_llm_model: str = "claude-sonnet-5"
+
+    # ---- Queue -----------------------------------------------------------
+    redis_url: str = ""
+
+    # ---- Workspace / budgets --------------------------------------------
+    workspace_root: str = "./.workspaces"
+    max_repository_size_mb: int = 200
+    workspace_retention_minutes: int = 60
+    max_analysis_cost_usd: float = 2.0
+    max_context_files: int = 24
+    max_context_tokens: int = 60_000
+    agent_max_steps: int = 12
+
+    # ---- Sandbox ---------------------------------------------------------
+    sandbox_mode: SandboxMode = SandboxMode.SUBPROCESS
+    sandbox_image: str = "repomedic/sandbox:latest"
+    sandbox_cpu_limit: str = "1.0"
+    sandbox_memory_limit: str = "1g"
+    scanner_timeout_seconds: int = 120
+    allow_host_test_execution: bool = False
+
+    # ---- Rate limiting ---------------------------------------------------
+    rate_limit_requests: int = 120
+    rate_limit_window_seconds: int = 60
+
+    @field_validator("frontend_url", "app_url", "api_url", mode="before")
+    @classmethod
+    def _strip_trailing_slash(cls, value: str) -> str:
+        return str(value).rstrip("/")
+
+    # ---- Derived helpers -------------------------------------------------
+    @property
+    def is_production(self) -> bool:
+        return self.app_env in ("production", "staging")
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Strict allowlist — the browser origins permitted to call the API."""
+        origins = {self.frontend_url, self.app_url}
+        return sorted(o for o in origins if o)
+
+    @property
+    def workspace_path(self) -> Path:
+        raw = Path(self.workspace_root)
+        path = raw if raw.is_absolute() else (BACKEND_ROOT / raw)
+        return path.resolve()
+
+    @property
+    def sqlalchemy_url(self) -> str:
+        """Resolve the SQLAlchemy URL, defaulting to a local SQLite file.
+
+        Turso is addressed through the ``sqlite+libsql`` dialect; the auth token
+        travels as a query parameter, which is what ``sqlalchemy-libsql`` expects.
+        """
+        url = self.database_url.strip()
+        if not url:
+            data_dir = BACKEND_ROOT / "data"
+            data_dir.mkdir(parents=True, exist_ok=True)
+            return f"sqlite:///{(data_dir / 'repomedic.db').as_posix()}"
+        if url.startswith("libsql://"):
+            url = "sqlite+" + url
+        if url.startswith("sqlite+libsql://") and self.database_auth_token:
+            joiner = "&" if "?" in url else "?"
+            url = f"{url}{joiner}authToken={self.database_auth_token}&secure=true"
+        return url
+
+    @property
+    def is_turso(self) -> bool:
+        return "libsql" in self.sqlalchemy_url
+
+    @property
+    def effective_jwt_secret(self) -> str:
+        if self.jwt_secret:
+            return self.jwt_secret
+        if self.is_production:
+            raise RuntimeError("JWT_SECRET must be set outside development")
+        # Deterministic dev-only secret so local restarts do not invalidate sessions.
+        return hashlib.sha256(b"repomedic-development-jwt-secret").hexdigest()
+
+    @property
+    def effective_encryption_key(self) -> str:
+        if self.encryption_key:
+            return self.encryption_key
+        if self.is_production:
+            raise RuntimeError("ENCRYPTION_KEY must be set outside development")
+        digest = hashlib.sha256(b"repomedic-development-encryption-key").digest()
+        return base64.urlsafe_b64encode(digest).decode()
+
+    @property
+    def github_oauth_configured(self) -> bool:
+        return bool(self.github_client_id and self.github_client_secret)
+
+    @property
+    def github_app_configured(self) -> bool:
+        return bool(self.github_app_id and self.github_private_key)
+
+    @property
+    def github_scope_list(self) -> list[str]:
+        return [s.strip() for s in self.github_oauth_scopes.split(",") if s.strip()]
+
+    def llm_api_key(self, provider: str) -> str:
+        return {
+            "anthropic": self.anthropic_api_key,
+            "openai": self.openai_api_key,
+            "groq": self.groq_api_key,
+            "local": "local",
+            "heuristic": "heuristic",
+        }.get(provider, "")
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()

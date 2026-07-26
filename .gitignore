@@ -1,0 +1,56 @@
+# ---- Python / backend ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+backend/data/
+backend/.workspaces/
+
+# ---- Node / frontend ----
+node_modules/
+.next/
+out/
+build/
+dist/
+.turbo/
+*.tsbuildinfo
+coverage/
+
+# ---- Environment ----
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# ---- Editors / OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- Runtime artifacts ----
+/tmp/
+logs/
+*.log
+workspaces/
+.env
+.env.*
+!.env.example
+
+backend/.env
+frontend/.env.local
+
+*.pem
+*.key
+credentials.json
+secrets.json
