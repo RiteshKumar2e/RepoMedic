@@ -161,7 +161,7 @@ export default function AnalysisPage({ params }: { params: Promise<{ analysisId:
   };
 
   return (
-    <div className="h-screen bg-slate-950 flex text-slate-100 overflow-hidden">
+    <div className="h-screen bg-canvas flex text-ink overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 h-full">
         <Header />
@@ -175,7 +175,7 @@ export default function AnalysisPage({ params }: { params: Promise<{ analysisId:
         />
 
         {/* Action & Filter Toolbar */}
-        <div className="flex flex-wrap items-center justify-between px-4 border-b border-slate-800 bg-slate-950/80">
+        <div className="flex flex-wrap items-center justify-between px-4 border-b border-line bg-canvas">
           <FilterBar
             selectedSeverities={selectedSeverities}
             onToggleSeverity={handleToggleSeverity}

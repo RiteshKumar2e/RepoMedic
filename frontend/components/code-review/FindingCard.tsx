@@ -43,22 +43,22 @@ export function FindingCard({
   const patch: Patch | undefined = finding.patches?.[0];
 
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/80 hover:border-slate-700 transition-colors p-4 space-y-3">
+    <div className="rounded-lg border border-line bg-surface hover:border-line transition-colors p-4 space-y-3">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
             <Badge variant={finding.severity as any}>{finding.severity.toUpperCase()}</Badge>
-            <span className="text-[11px] font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
+            <span className="text-[11px] font-mono text-ink-muted bg-inset px-2 py-0.5 rounded">
               {finding.category}
             </span>
-            <span className="text-xs font-mono text-slate-400">
+            <span className="text-xs font-mono text-ink-muted">
               {finding.file_path}:{finding.start_line}
             </span>
           </div>
           <h4
             onClick={() => onSelectFinding(finding)}
-            className="text-sm font-semibold text-slate-100 hover:text-sky-400 cursor-pointer transition-colors"
+            className="text-sm font-semibold text-ink hover:text-accent cursor-pointer transition-colors"
           >
             {finding.title}
           </h4>
@@ -66,65 +66,65 @@ export function FindingCard({
 
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-slate-400 hover:text-slate-200 p-1"
+          className="text-ink-muted hover:text-ink p-1"
         >
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
       </div>
 
       {expanded && (
-        <div className="space-y-3 text-xs border-t border-slate-800/80 pt-3">
+        <div className="space-y-3 text-xs border-t border-line pt-3">
           {/* Explanation */}
           <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+            <span className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider block mb-1">
               Explanation
             </span>
-            <p className="text-slate-300 leading-relaxed">{finding.description}</p>
+            <p className="text-ink leading-relaxed">{finding.description}</p>
           </div>
 
           {/* Risk */}
           {finding.risk && (
-            <div className="p-2.5 rounded bg-red-950/20 border border-red-900/30">
-              <span className="text-[11px] font-semibold text-red-400 block mb-0.5">
+            <div className="p-2.5 rounded bg-critical-soft border border-critical-line">
+              <span className="text-[11px] font-semibold text-critical block mb-0.5">
                 Impact & Risk
               </span>
-              <p className="text-red-300 text-[11px] leading-relaxed">{finding.risk}</p>
+              <p className="text-critical text-[11px] leading-relaxed">{finding.risk}</p>
             </div>
           )}
 
           {/* Proposed Fix & Validation */}
           {patch && (
-            <div className="p-3 rounded bg-slate-950 border border-slate-800 space-y-2.5">
+            <div className="p-3 rounded bg-canvas border border-line space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="font-semibold text-ink flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-medium" />
                   AST-Aware Proposed Fix
                 </span>
-                <span className="text-[11px] font-mono text-emerald-400">
+                <span className="text-[11px] font-mono text-success">
                   Confidence: {Math.round((patch.confidence || 0.95) * 100)}%
                 </span>
               </div>
 
-              <p className="text-slate-400 text-[11px]">{patch.explanation}</p>
+              <p className="text-ink-muted text-[11px]">{patch.explanation}</p>
 
               {/* Validation signals */}
               <div className="flex flex-wrap gap-2 text-[10px] font-mono">
-                <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                <span className="flex items-center gap-1 text-success bg-success-soft px-2 py-0.5 rounded">
                   <CheckCircle2 className="w-3 h-3" /> Syntax
                 </span>
-                <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                <span className="flex items-center gap-1 text-success bg-success-soft px-2 py-0.5 rounded">
                   <CheckCircle2 className="w-3 h-3" /> Linter
                 </span>
-                <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                <span className="flex items-center gap-1 text-success bg-success-soft px-2 py-0.5 rounded">
                   <CheckCircle2 className="w-3 h-3" /> Typecheck
                 </span>
-                <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                <span className="flex items-center gap-1 text-success bg-success-soft px-2 py-0.5 rounded">
                   <CheckCircle2 className="w-3 h-3" /> Security
                 </span>
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+              <div className="flex items-center justify-between pt-2 border-t border-line">
                 <Button
                   size="sm"
                   variant="outline"

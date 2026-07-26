@@ -70,13 +70,13 @@ export function DiffViewer({
   } as const;
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-950 min-w-0 overflow-hidden">
-      <div className="h-10 px-4 border-b border-slate-800 bg-slate-900/60 flex items-center justify-between font-mono text-xs text-slate-300">
+    <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-canvas">
+      <div className="flex h-10 items-center justify-between border-b border-line bg-surface px-4 font-mono text-xs text-ink">
         <span className="truncate" title={filePath}>
           {filePath}
         </span>
-        <div className="flex items-center space-x-2 shrink-0">
-          <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px]">
+        <div className="flex shrink-0 items-center space-x-2">
+          <span className="rounded bg-inset px-2 py-0.5 text-[10px] text-ink-muted">
             {language}
           </span>
           {isDiff ? (

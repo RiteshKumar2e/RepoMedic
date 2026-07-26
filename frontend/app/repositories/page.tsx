@@ -30,7 +30,7 @@ export default function RepositoriesPage() {
       ];
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100">
+    <div className="min-h-screen bg-canvas flex text-ink">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
@@ -38,18 +38,18 @@ export default function RepositoriesPage() {
         <main className="flex-1 p-6 space-y-6 overflow-y-auto">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-slate-100">Connected Repositories</h1>
-              <p className="text-xs text-slate-400 mt-1">Manage scanned repositories and review configurations</p>
+              <h1 className="text-xl font-bold text-ink">Connected Repositories</h1>
+              <p className="text-xs text-ink-muted mt-1">Manage scanned repositories and review configurations</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {repoList.map((repo) => (
-              <Card key={repo.id} className="hover:border-slate-700 transition-colors">
+              <Card key={repo.id} className="hover:border-line transition-colors">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <FolderGit2 className="w-5 h-5 text-sky-400" />
+                      <FolderGit2 className="w-5 h-5 text-accent" />
                       <CardTitle>{repo.full_name}</CardTitle>
                     </div>
                     {repo.primary_language && (
@@ -61,22 +61,22 @@ export default function RepositoriesPage() {
                   <CardDescription>{repo.description || "No description provided"}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+                  <div className="flex items-center justify-between text-xs text-ink-muted font-mono">
                     <span className="flex items-center gap-1">
-                      <GitPullRequest className="w-3.5 h-3.5 text-amber-400" />
+                      <GitPullRequest className="w-3.5 h-3.5 text-medium" />
                       {repo.open_pr_count} Open PRs
                     </span>
                     <span className="flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 text-amber-300" />
+                      <Star className="w-3.5 h-3.5 text-medium" />
                       {repo.stars} Stars
                     </span>
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <Clock className="w-3.5 h-3.5 text-ink-muted" />
                       {formatDate(repo.last_analyzed_at)}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-800">
+                  <div className="flex items-center justify-end space-x-2 pt-2 border-t border-line">
                     <Link href={`/repositories/${repo.id}`}>
                       <Button size="sm" className="gap-1.5">
                         View Repository <ArrowRight className="w-3.5 h-3.5" />

@@ -42,22 +42,22 @@ export default function PullRequestDetailPage({ params }: { params: Promise<{ pu
   const author = pr?.author || "ritesh-kumar";
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100">
+    <div className="min-h-screen bg-canvas flex text-ink">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
 
         <main className="flex-1 p-6 space-y-6 overflow-y-auto">
           {/* PR Header */}
-          <div className="p-6 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-md space-y-4">
+          <div className="p-6 rounded-xl border border-line bg-surface space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center space-x-3">
-                  <GitPullRequest className="w-6 h-6 text-emerald-400" />
-                  <span className="font-mono text-slate-400 text-sm">#{prNumber}</span>
-                  <h1 className="text-xl font-bold text-slate-100">{title}</h1>
+                  <GitPullRequest className="w-6 h-6 text-success" />
+                  <span className="font-mono text-ink-muted text-sm">#{prNumber}</span>
+                  <h1 className="text-xl font-bold text-ink">{title}</h1>
                 </div>
-                <div className="flex items-center space-x-3 text-xs text-slate-400 font-mono">
+                <div className="flex items-center space-x-3 text-xs text-ink-muted font-mono">
                   <span>Author: @{author}</span>
                   <span>•</span>
                   <span>Branch: feature/checkout → main</span>
@@ -80,13 +80,13 @@ export default function PullRequestDetailPage({ params }: { params: Promise<{ pu
               <CardDescription>Previous repository-aware reviews run on this pull request</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="p-4 rounded-lg border border-slate-800 bg-slate-950/60 flex items-center justify-between">
+              <div className="p-4 rounded-lg border border-line bg-canvas flex items-center justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
                     <Badge variant="critical">Do Not Merge</Badge>
-                    <span className="text-xs font-semibold text-slate-200">Analysis #demo-analysis-id</span>
+                    <span className="text-xs font-semibold text-ink">Analysis #demo-analysis-id</span>
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-ink-muted">
                     7 issues detected (1 Critical SQL Injection, 1 High Auth Bypass, 1 High Secret). 3 patches validated.
                   </p>
                 </div>

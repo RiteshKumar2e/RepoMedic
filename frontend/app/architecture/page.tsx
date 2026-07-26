@@ -32,7 +32,7 @@ export default function ArchitectureGraphPage() {
   const edges = graph?.edges?.length ? graph.edges : SEEDED_GRAPH_EDGES;
 
   return (
-    <div className="h-screen bg-slate-950 flex text-slate-100 overflow-hidden">
+    <div className="h-screen bg-canvas flex text-ink overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 h-full">
         <Header />
@@ -41,10 +41,10 @@ export default function ArchitectureGraphPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                <GitFork className="w-5 h-5 text-sky-400" /> Repository Knowledge Graph
+              <h1 className="text-xl font-bold text-ink flex items-center gap-2">
+                <GitFork className="w-5 h-5 text-accent" /> Repository Knowledge Graph
               </h1>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-ink-muted mt-1">
                 Visualizing modules, symbol calls, database model dependencies, and test coverage blast radius
               </p>
             </div>
@@ -59,7 +59,7 @@ export default function ArchitectureGraphPage() {
                   5 Nodes • 4 Edges
                 </Badge>
               </CardHeader>
-              <CardContent className="flex-1 relative bg-slate-950/80 rounded-b-lg border-t border-slate-800 p-6 flex items-center justify-center">
+              <CardContent className="flex-1 relative bg-canvas rounded-b-lg border-t border-line p-6 flex items-center justify-center">
                 {/* Node Grid Layout */}
                 <div className="w-full max-w-lg space-y-6">
                   {nodes.map((node) => {
@@ -70,17 +70,17 @@ export default function ArchitectureGraphPage() {
                         onClick={() => setSelectedNode(node.id)}
                         className={`p-4 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${
                           isSelected
-                            ? "bg-sky-500/10 border-sky-500 text-sky-300 shadow-lg shadow-sky-500/10"
+                            ? "bg-accent-soft border-accent-line text-accent shadow-sm shadow-sky-500/10"
                             : node.changed
-                            ? "bg-amber-500/10 border-amber-500/40 text-amber-200"
-                            : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                            ? "bg-medium-soft border-medium-line text-medium"
+                            : "bg-surface border-line text-ink hover:border-line"
                         }`}
                       >
                         <div className="flex items-center space-x-3">
-                          <FileCode2 className="w-5 h-5 text-sky-400" />
+                          <FileCode2 className="w-5 h-5 text-accent" />
                           <div>
                             <span className="font-mono text-xs font-semibold">{node.label}</span>
-                            <span className="text-[10px] block text-slate-400 capitalize">
+                            <span className="text-[10px] block text-ink-muted capitalize">
                               Type: {node.type}
                             </span>
                           </div>
@@ -103,35 +103,35 @@ export default function ArchitectureGraphPage() {
               <CardContent className="space-y-4">
                 {selectedNode ? (
                   <div className="space-y-3">
-                    <div className="p-3 rounded bg-slate-950 border border-slate-800">
-                      <span className="text-[11px] font-mono text-slate-400 block mb-1">
+                    <div className="p-3 rounded bg-canvas border border-line">
+                      <span className="text-[11px] font-mono text-ink-muted block mb-1">
                         Selected Target
                       </span>
-                      <span className="font-mono text-xs text-sky-400 font-semibold">
+                      <span className="font-mono text-xs text-accent font-semibold">
                         {selectedNode}
                       </span>
                     </div>
 
                     <div className="space-y-2">
-                      <span className="text-xs font-semibold text-slate-300">
+                      <span className="text-xs font-semibold text-ink">
                         Outbound Imports / Reads:
                       </span>
-                      <div className="p-2.5 rounded bg-slate-950 border border-slate-800 text-xs font-mono text-slate-300">
+                      <div className="p-2.5 rounded bg-canvas border border-line text-xs font-mono text-ink">
                         → app/services/discounts.py
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <span className="text-xs font-semibold text-slate-300">
+                      <span className="text-xs font-semibold text-ink">
                         Covering Test Suites:
                       </span>
-                      <div className="p-2.5 rounded bg-emerald-950/20 border border-emerald-900/30 text-xs font-mono text-emerald-400 flex items-center gap-2">
+                      <div className="p-2.5 rounded bg-success-soft border border-success-line text-xs font-mono text-success flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4" /> tests/test_checkout.py
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-500">Click a node on the canvas to inspect blast radius.</p>
+                  <p className="text-xs text-ink-subtle">Click a node on the canvas to inspect blast radius.</p>
                 )}
               </CardContent>
             </Card>

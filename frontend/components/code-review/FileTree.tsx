@@ -24,8 +24,8 @@ export function FileTree({ files, selectedFile, onSelectFile, findings }: FileTr
   };
 
   return (
-    <div className="w-64 border-r border-slate-800 bg-slate-950/80 flex flex-col h-full overflow-hidden shrink-0">
-      <div className="p-3 border-b border-slate-800 flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+    <div className="w-64 border-r border-line bg-canvas flex flex-col h-full overflow-hidden shrink-0">
+      <div className="p-3 border-b border-line flex items-center justify-between text-xs font-semibold text-ink-muted uppercase tracking-wider">
         <span>Changed Files ({files.length})</span>
       </div>
 
@@ -42,12 +42,12 @@ export function FileTree({ files, selectedFile, onSelectFile, findings }: FileTr
               className={cn(
                 "w-full flex items-center justify-between px-2.5 py-2 rounded-md text-xs font-mono transition-colors text-left",
                 isSelected
-                  ? "bg-sky-500/10 text-sky-300 border border-sky-500/30"
-                  : "text-slate-300 hover:bg-slate-900 hover:text-slate-100"
+                  ? "bg-accent-soft text-accent border border-accent-line"
+                  : "text-ink hover:bg-surface hover:text-ink"
               )}
             >
               <div className="flex items-center space-x-2 min-w-0 truncate">
-                <FileCode2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                <FileCode2 className="w-3.5 h-3.5 shrink-0 text-ink-muted" />
                 <span className="truncate">{file.path}</span>
               </div>
 

@@ -38,17 +38,17 @@ export default function DashboardPage() {
   }, [user, demoLogin]);
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100">
+    <div className="min-h-screen bg-canvas flex text-ink">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
 
         <main className="flex-1 p-6 space-y-6 overflow-y-auto">
           {/* Welcome Banner */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900 to-sky-950/30">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-xl border border-line">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-slate-100">
+                <h1 className="text-xl font-bold text-ink">
                   Welcome back, {user?.name || user?.login || "Developer"}
                 </h1>
                 {isDemo && (
@@ -57,7 +57,7 @@ export default function DashboardPage() {
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-ink-muted mt-1">
                 Repository-aware AI analysis and 6-step fix validation active.
               </p>
             </div>
@@ -72,12 +72,12 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">Connected Repositories</p>
-                  <h3 className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-xs font-medium text-ink-muted">Connected Repositories</p>
+                  <h3 className="text-2xl font-bold text-ink mt-1">
                     {repositories?.length || 1}
                   </h3>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400">
+                <div className="w-10 h-10 rounded-lg bg-accent-soft border border-accent-line flex items-center justify-center text-accent">
                   <FolderGit2 className="w-5 h-5" />
                 </div>
               </CardContent>
@@ -86,12 +86,12 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">Total Findings</p>
-                  <h3 className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-xs font-medium text-ink-muted">Total Findings</p>
+                  <h3 className="text-2xl font-bold text-ink mt-1">
                     {analytics?.total_findings_count ?? 7}
                   </h3>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <div className="w-10 h-10 rounded-lg bg-medium-soft border border-medium-line flex items-center justify-center text-medium">
                   <ShieldAlert className="w-5 h-5" />
                 </div>
               </CardContent>
@@ -100,12 +100,12 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">Fix Acceptance Rate</p>
-                  <h3 className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-xs font-medium text-ink-muted">Fix Acceptance Rate</p>
+                  <h3 className="text-2xl font-bold text-ink mt-1">
                     {analytics?.fix_acceptance_rate ?? 100}%
                   </h3>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <div className="w-10 h-10 rounded-lg bg-success-soft border border-success-line flex items-center justify-center text-success">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
               </CardContent>
@@ -114,8 +114,8 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">Avg Analysis Duration</p>
-                  <h3 className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-xs font-medium text-ink-muted">Avg Analysis Duration</p>
+                  <h3 className="text-2xl font-bold text-ink mt-1">
                     {formatDuration(analytics?.average_analysis_duration ?? 4.2)}
                   </h3>
                 </div>
@@ -143,7 +143,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {reposLoading ? (
-                  <div className="p-4 text-center text-xs text-slate-500">Loading repositories...</div>
+                  <div className="p-4 text-center text-xs text-ink-subtle">Loading repositories...</div>
                 ) : (
                   (repositories || [
                     {
@@ -160,31 +160,31 @@ export default function DashboardPage() {
                   ]).map((repo) => (
                     <div
                       key={repo.id}
-                      className="p-3.5 rounded-lg border border-slate-800 bg-slate-950/50 hover:border-slate-700 transition-colors flex items-center justify-between"
+                      className="p-3.5 rounded-lg border border-line bg-canvas hover:border-line transition-colors flex items-center justify-between"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <FolderGit2 className="w-4 h-4 text-sky-400" />
+                          <FolderGit2 className="w-4 h-4 text-accent" />
                           <Link
                             href={`/repositories/${repo.id}`}
-                            className="font-medium text-sm text-slate-200 hover:text-sky-400"
+                            className="font-medium text-sm text-ink hover:text-accent"
                           >
                             {repo.full_name}
                           </Link>
                           {repo.primary_language && (
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-inset text-ink-muted">
                               {repo.primary_language}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-ink-muted">
                           {repo.description || "No description provided"}
                         </p>
                       </div>
 
-                      <div className="flex items-center space-x-3 text-xs text-slate-400">
+                      <div className="flex items-center space-x-3 text-xs text-ink-muted">
                         <span className="flex items-center gap-1 font-mono">
-                          <GitPullRequest className="w-3.5 h-3.5 text-amber-400" />
+                          <GitPullRequest className="w-3.5 h-3.5 text-medium" />
                           {repo.open_pr_count} open PR
                         </span>
                         <Link href={`/repositories/${repo.id}`}>
@@ -217,19 +217,19 @@ export default function DashboardPage() {
                     <div key={item.severity} className="space-y-1">
                       <div className="flex items-center justify-between text-xs font-medium">
                         <span className={`capitalize ${style.text}`}>{item.severity}</span>
-                        <span className="font-mono text-slate-300">
+                        <span className="font-mono text-ink">
                           {item.count} ({item.percent}%)
                         </span>
                       </div>
-                      <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div className="w-full bg-inset rounded-full h-1.5 overflow-hidden">
                         <div
                           className={`h-full ${
                             item.severity === "critical"
-                              ? "bg-red-500"
+                              ? "bg-critical"
                               : item.severity === "high"
-                              ? "bg-orange-500"
+                              ? "bg-high"
                               : item.severity === "medium"
-                              ? "bg-amber-500"
+                              ? "bg-medium"
                               : "bg-blue-500"
                           }`}
                           style={{ width: `${item.percent}%` }}

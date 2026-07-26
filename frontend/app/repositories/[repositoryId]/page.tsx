@@ -43,7 +43,7 @@ export default function RepositoryDetailPage({ params }: { params: Promise<{ rep
       ];
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100">
+    <div className="min-h-screen bg-canvas flex text-ink">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
@@ -53,13 +53,13 @@ export default function RepositoryDetailPage({ params }: { params: Promise<{ rep
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
-                <FolderGit2 className="w-5 h-5 text-sky-400" />
-                <h1 className="text-xl font-bold text-slate-100">{repo?.full_name || "ecommerce-api-demo"}</h1>
+                <FolderGit2 className="w-5 h-5 text-accent" />
+                <h1 className="text-xl font-bold text-ink">{repo?.full_name || "ecommerce-api-demo"}</h1>
                 <Badge variant="outline" className="font-mono">
                   {repo?.primary_language || "Python"}
                 </Badge>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-ink-muted">
                 {repo?.description || "E-Commerce REST API with payment, discount, and checkout routes"}
               </p>
             </div>
@@ -81,19 +81,19 @@ export default function RepositoryDetailPage({ params }: { params: Promise<{ rep
               {prList.map((pr) => (
                 <div
                   key={pr.id}
-                  className="p-4 rounded-lg border border-slate-800 bg-slate-950/60 hover:border-slate-700 transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  className="p-4 rounded-lg border border-line bg-canvas hover:border-line transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
-                      <GitPullRequest className="w-4 h-4 text-emerald-400" />
-                      <span className="font-mono text-xs text-slate-400">#{pr.github_pr_number}</span>
-                      <h3 className="font-semibold text-sm text-slate-200">{pr.title}</h3>
+                      <GitPullRequest className="w-4 h-4 text-success" />
+                      <span className="font-mono text-xs text-ink-muted">#{pr.github_pr_number}</span>
+                      <h3 className="font-semibold text-sm text-ink">{pr.title}</h3>
                     </div>
-                    <div className="flex items-center space-x-3 text-xs text-slate-400 font-mono">
+                    <div className="flex items-center space-x-3 text-xs text-ink-muted font-mono">
                       <span>by @{pr.author}</span>
                       <span>•</span>
-                      <span className="text-emerald-400">+{pr.additions}</span>
-                      <span className="text-red-400">-{pr.deletions}</span>
+                      <span className="text-success">+{pr.additions}</span>
+                      <span className="text-critical">-{pr.deletions}</span>
                       <span>•</span>
                       <span>{pr.changed_files} files changed</span>
                     </div>

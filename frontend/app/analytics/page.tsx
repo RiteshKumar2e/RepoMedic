@@ -11,14 +11,14 @@ export default function AnalyticsPage() {
   const { data: analytics } = useAnalytics();
 
   const categories = [
-    { name: "Security & Secrets", count: 3, percent: 43, color: "bg-red-500" },
-    { name: "Performance (N+1, Async)", count: 2, percent: 29, color: "bg-amber-500" },
-    { name: "Architecture & Cycles", count: 1, percent: 14, color: "bg-sky-500" },
+    { name: "Security & Secrets", count: 3, percent: 43, color: "bg-critical" },
+    { name: "Performance (N+1, Async)", count: 2, percent: 29, color: "bg-medium" },
+    { name: "Architecture & Cycles", count: 1, percent: 14, color: "bg-accent" },
     { name: "Missing Tests", count: 1, percent: 14, color: "bg-indigo-500" },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100">
+    <div className="min-h-screen bg-canvas flex text-ink">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
@@ -26,10 +26,10 @@ export default function AnalyticsPage() {
         <main className="flex-1 p-6 space-y-6 overflow-y-auto">
           {/* Header */}
           <div>
-            <h1 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-sky-400" /> Platform Analytics & Posture
+            <h1 className="text-xl font-bold text-ink flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-accent" /> Platform Analytics & Posture
             </h1>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-ink-muted mt-1">
               Code quality trends, fix acceptance rates, defect categories, and high-risk modules
             </p>
           </div>
@@ -42,8 +42,8 @@ export default function AnalyticsPage() {
                 <CardDescription>Percentage of AI proposals approved</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="text-3xl font-extrabold text-emerald-400">100%</div>
-                <p className="text-xs text-slate-400">3 of 3 proposed patches approved and merged</p>
+                <div className="text-3xl font-extrabold text-success">100%</div>
+                <p className="text-xs text-ink-muted">3 of 3 proposed patches approved and merged</p>
               </CardContent>
             </Card>
 
@@ -53,8 +53,8 @@ export default function AnalyticsPage() {
                 <CardDescription>Full pipeline execution time</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="text-3xl font-extrabold text-sky-400">4.2s</div>
-                <p className="text-xs text-slate-400">Deterministic scans + AST + Parallel AI agents</p>
+                <div className="text-3xl font-extrabold text-accent">4.2s</div>
+                <p className="text-xs text-ink-muted">Deterministic scans + AST + Parallel AI agents</p>
               </CardContent>
             </Card>
 
@@ -64,8 +64,8 @@ export default function AnalyticsPage() {
                 <CardDescription>Across all open pull requests</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="text-3xl font-extrabold text-slate-100">7</div>
-                <p className="text-xs text-slate-400">1 Critical, 2 High, 3 Medium, 1 Low</p>
+                <div className="text-3xl font-extrabold text-ink">7</div>
+                <p className="text-xs text-ink-muted">1 Critical, 2 High, 3 Medium, 1 Low</p>
               </CardContent>
             </Card>
           </div>
@@ -80,12 +80,12 @@ export default function AnalyticsPage() {
               {categories.map((cat) => (
                 <div key={cat.name} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-300 font-medium">{cat.name}</span>
-                    <span className="font-mono text-slate-400">
+                    <span className="text-ink font-medium">{cat.name}</span>
+                    <span className="font-mono text-ink-muted">
                       {cat.count} ({cat.percent}%)
                     </span>
                   </div>
-                  <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-inset rounded-full h-2 overflow-hidden">
                     <div className={`h-full ${cat.color}`} style={{ width: `${cat.percent}%` }} />
                   </div>
                 </div>

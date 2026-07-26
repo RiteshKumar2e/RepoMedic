@@ -21,16 +21,16 @@ export function FindingPanel({
   isRejecting,
 }: FindingPanelProps) {
   return (
-    <div className="w-96 border-l border-slate-800 bg-slate-950/80 flex flex-col h-full overflow-hidden shrink-0">
-      <div className="p-3 border-b border-slate-800 flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+    <div className="w-96 border-l border-line bg-canvas flex flex-col h-full overflow-hidden shrink-0">
+      <div className="p-3 border-b border-line flex items-center justify-between">
+        <span className="text-xs font-semibold text-ink uppercase tracking-wider">
           AI Findings & Fixes ({findings.length})
         </span>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {findings.length === 0 ? (
-          <div className="p-6 text-center text-xs text-slate-500 space-y-2">
+          <div className="p-6 text-center text-xs text-ink-subtle space-y-2">
             <p>No findings match the selected filters.</p>
           </div>
         ) : (
