@@ -49,3 +49,16 @@ def validate_code(code: str) -> bool:
     if not code.isalnum():
         return False
     return True
+
+
+def validate_promo_code(promo: str) -> bool:
+    """Validate a promo code."""
+    # FINDING: copy-paste of validate_code with the parameter renamed. When the
+    # length rule changes in one, the other silently keeps the old bound.
+    if not promo:
+        return False
+    if len(promo) < 4 or len(promo) > 32:
+        return False
+    if not promo.isalnum():
+        return False
+    return True

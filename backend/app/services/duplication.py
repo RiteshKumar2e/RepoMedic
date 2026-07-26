@@ -24,6 +24,12 @@ SHINGLE_SIZE = 3
 MAX_COMPARISONS = 8000
 
 _TOKEN_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*|\d+|[^\s\w]")
+# Strings are collapsed before comments so a `#` inside a literal is not
+# mistaken for a comment.
+_STRING_RE = re.compile(
+    r'"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'|"(?:[^"\\\n]|\\.)*"|\'(?:[^\'\\\n]|\\.)*\'|`(?:[^`\\]|\\.)*`'
+)
+_COMMENT_RE = re.compile(r"#[^\n]*|//[^\n]*|/\*[\s\S]*?\*/")
 # Identifier names are normalised away; keywords and operators are what matter.
 _KEYWORDS = {
     "if", "else", "elif", "for", "while", "return", "def", "class", "try", "except",
@@ -41,7 +47,15 @@ class _Block:
 
 
 def _normalise(source: str) -> list[str]:
-    """Tokenise, replacing identifiers and literals with placeholders."""
+    """Tokenise, replacing identifiers and literals with placeholders.
+
+    Comments and docstrings are removed first: two copy-pasted functions are
+    duplicates of each other whether or not somebody reworded the comment above
+    them, and leaving prose in the token stream drowns out the structure.
+    """
+    source = _STRING_RE.sub(" __strlit__ ", source)
+    source = _COMMENT_RE.sub(" ", source)
+
     tokens: list[str] = []
     for raw in _TOKEN_RE.findall(source):
         if raw in _KEYWORDS:

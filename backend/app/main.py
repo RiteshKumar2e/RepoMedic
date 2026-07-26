@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI):
         from app.services.demo import seed_demo_workspace
 
         try:
-            seed_demo_workspace()
+            await seed_demo_workspace()
         except Exception as exc:  # demo data must never block startup
             logger.warning("demo.seed_failed", error=str(exc))
 

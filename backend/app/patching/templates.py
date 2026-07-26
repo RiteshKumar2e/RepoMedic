@@ -63,13 +63,40 @@ def _add_request_timeout(block: str) -> Optional[TemplateResult]:
     match = re.search(r"(requests|httpx)\.(get|post|put|delete|patch|request)\s*\(", block)
     if not match:
         return None
-    # Insert before the final closing parenthesis of the call.
     closing = block.rfind(")")
     if closing == -1:
         return None
-    prefix = block[:closing].rstrip()
-    separator = "" if prefix.endswith("(") else ", "
-    updated = f"{prefix}{separator}timeout=10{block[closing:]}"
+
+    head, tail = block[:closing], block[closing + 1 :]
+    stripped = head.rstrip()
+    if not stripped:
+        return None
+
+    # Detect a multi-line call whose ")" sits on its own line, so the inserted
+    # argument matches the existing formatting instead of collapsing the call.
+    trailing = head[len(stripped) :]
+    closing_on_own_line = "\n" in trailing
+    closing_indent = trailing.rsplit("\n", 1)[-1] if closing_on_own_line else ""
+
+    if closing_on_own_line:
+        argument_indent = closing_indent + "    "
+        for line in block.splitlines()[1:]:
+            if line.strip():
+                argument_indent = line[: len(line) - len(line.lstrip())]
+                break
+        separator = "" if stripped.endswith((",", "(")) else ","
+        updated = (
+            f"{stripped}{separator}\n{argument_indent}timeout=10,\n{closing_indent}){tail}"
+        )
+    else:
+        if stripped.endswith("("):
+            separator = ""
+        elif stripped.endswith(","):
+            separator = " "
+        else:
+            separator = ", "
+        updated = f"{stripped}{separator}timeout=10){tail}"
+
     return TemplateResult(
         suggested_code=updated,
         explanation=(
@@ -248,17 +275,23 @@ def _dangerous_inner_html(block: str) -> Optional[TemplateResult]:
 
 
 def _empty_catch(block: str) -> Optional[TemplateResult]:
-    match = re.search(r"^(\s*)catch\s*\(([^)]*)\)\s*\{\s*\}", block, re.M)
+    # The catch is usually preceded by the try's closing brace on the same line
+    # (`} catch (error) {}`), so that prefix has to be part of the match.
+    pattern = re.compile(r"^([ \t]*)(\}\s*)?catch\s*\(([^)]*)\)\s*\{\s*\}", re.M)
+    match = pattern.search(block)
     if not match:
         return None
-    indent, binding = match.group(1), (match.group(2).strip() or "error")
-    updated = re.sub(
-        r"^(\s*)catch\s*\([^)]*\)\s*\{\s*\}",
-        f"{indent}catch ({binding}) {{\n{indent}  console.error('operation failed', {binding});\n"
-        f"{indent}  throw {binding};\n{indent}}}",
+
+    indent = match.group(1)
+    closing_brace = match.group(2) or ""
+    binding = (match.group(3).strip() or "error")
+    updated = pattern.sub(
+        f"{indent}{closing_brace}catch ({binding}) {{\n"
+        f"{indent}  console.error('operation failed', {binding});\n"
+        f"{indent}  throw {binding};\n"
+        f"{indent}}}",
         block,
         count=1,
-        flags=re.M,
     )
     return TemplateResult(
         suggested_code=updated,

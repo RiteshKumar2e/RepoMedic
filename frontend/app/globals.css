@@ -82,6 +82,17 @@ code, pre, .font-mono {
   padding-top: 4px;
 }
 
+/* Highlights the line a finding points at (see components/code-review/DiffViewer.tsx) */
+.repomedic-highlight-line {
+  background: rgba(250, 204, 21, 0.12);
+}
+
+.repomedic-highlight-gutter {
+  background: #facc15;
+  width: 3px !important;
+  margin-left: 3px;
+}
+
 /* Glow & Glass effects */
 .glass-panel {
   background: rgba(15, 23, 42, 0.75);

@@ -1,4 +1,4 @@
-"""Persistent entities.
+﻿"""Persistent entities.
 
 Design notes
 ------------
@@ -10,11 +10,13 @@ Design notes
   its whole analysis history deterministically.
 """
 
-from __future__ import annotations
-
+# NOTE: this module deliberately does *not* use ``from __future__ import annotations``.
+# SQLModel resolves relationship targets by inspecting real annotation objects at
+# import time; postponed (string) annotations make SQLAlchemy raise
+# "seems to be using a generic class as the argument to relationship()".
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import JSON, Column, ForeignKey, String, Text, UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
@@ -60,7 +62,7 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=utcnow, nullable=False)
 
-    installations: list["GitHubInstallation"] = Relationship(
+    installations: List["GitHubInstallation"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
@@ -82,7 +84,7 @@ class GitHubInstallation(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=utcnow, nullable=False)
 
     user: Optional[User] = Relationship(back_populates="installations")
-    repositories: list["Repository"] = Relationship(
+    repositories: List["Repository"] = Relationship(
         back_populates="installation",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
@@ -106,7 +108,7 @@ class Repository(SQLModel, table=True):
     description: Optional[str] = None
     default_branch: str = "main"
     primary_language: Optional[str] = None
-    languages: dict[str, int] = Field(default_factory=dict, sa_column=Column(JSON))
+    languages: Dict[str, int] = Field(default_factory=dict, sa_column=Column(JSON))
     is_private: bool = True
     html_url: Optional[str] = None
     clone_url: Optional[str] = None
@@ -117,7 +119,7 @@ class Repository(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=utcnow, nullable=False)
 
     installation: Optional[GitHubInstallation] = Relationship(back_populates="repositories")
-    pull_requests: list["PullRequest"] = Relationship(
+    pull_requests: List["PullRequest"] = Relationship(
         back_populates="repository",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
@@ -154,7 +156,7 @@ class PullRequest(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=utcnow, nullable=False)
 
     repository: Optional[Repository] = Relationship(back_populates="pull_requests")
-    analyses: list["Analysis"] = Relationship(
+    analyses: List["Analysis"] = Relationship(
         back_populates="pull_request",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
@@ -178,11 +180,11 @@ class Analysis(SQLModel, table=True):
     token_usage: int = 0
     estimated_cost: float = 0.0
     files_analyzed: int = 0
-    scanners_run: list[str] = Field(default_factory=list, sa_column=Column(JSON))
-    reviewers_run: list[str] = Field(default_factory=list, sa_column=Column(JSON))
-    stage_timings: dict[str, float] = Field(default_factory=dict, sa_column=Column(JSON))
-    context_manifest: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
-    graph_snapshot: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    scanners_run: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    reviewers_run: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    stage_timings: Dict[str, float] = Field(default_factory=dict, sa_column=Column(JSON))
+    context_manifest: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    graph_snapshot: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     summary: Optional[str] = Field(default=None, sa_column=Column(Text))
     triggered_by: str = "manual"
     started_at: Optional[datetime] = None
@@ -192,7 +194,7 @@ class Analysis(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, nullable=False)
 
     pull_request: Optional[PullRequest] = Relationship(back_populates="analyses")
-    findings: list["Finding"] = Relationship(
+    findings: List["Finding"] = Relationship(
         back_populates="analysis",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
@@ -219,21 +221,21 @@ class Finding(SQLModel, table=True):
     end_line: int = 1
     code_snippet: str = Field(default="", sa_column=Column(Text))
     source: FindingSource = Field(index=True)
-    corroborating_sources: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    corroborating_sources: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     rule_id: Optional[str] = Field(default=None, index=True)
     cwe: Optional[str] = None
     fingerprint: str = Field(index=True)
     status: FindingStatus = Field(default=FindingStatus.OPEN, index=True)
-    related_files: list[str] = Field(default_factory=list, sa_column=Column(JSON))
-    score_breakdown: dict[str, float] = Field(default_factory=dict, sa_column=Column(JSON))
+    related_files: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    score_breakdown: Dict[str, float] = Field(default_factory=dict, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=utcnow, nullable=False)
 
     analysis: Optional[Analysis] = Relationship(back_populates="findings")
-    patches: list["Patch"] = Relationship(
+    patches: List["Patch"] = Relationship(
         back_populates="finding",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
-    comments: list["ReviewComment"] = Relationship(
+    comments: List["ReviewComment"] = Relationship(
         back_populates="finding",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
@@ -250,9 +252,9 @@ class Patch(SQLModel, table=True):
     unified_diff: str = Field(default="", sa_column=Column(Text))
     explanation: str = Field(default="", sa_column=Column(Text))
     expected_impact: str = Field(default="", sa_column=Column(Text))
-    side_effects: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    side_effects: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     confidence: float = 0.0
-    confidence_breakdown: dict[str, float] = Field(default_factory=dict, sa_column=Column(JSON))
+    confidence_breakdown: Dict[str, float] = Field(default_factory=dict, sa_column=Column(JSON))
     risk_level: RiskLevel = Field(default=RiskLevel.MEDIUM, index=True)
     status: PatchStatus = Field(default=PatchStatus.PROPOSED, index=True)
     validation_status: ValidationStatus = Field(default=ValidationStatus.PENDING, index=True)
@@ -266,7 +268,7 @@ class Patch(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, nullable=False)
 
     finding: Optional[Finding] = Relationship(back_populates="patches")
-    validation_runs: list["ValidationRun"] = Relationship(
+    validation_runs: List["ValidationRun"] = Relationship(
         back_populates="patch",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
@@ -283,9 +285,9 @@ class ValidationRun(SQLModel, table=True):
     tests_passed: Optional[bool] = None
     security_scan_passed: Optional[bool] = None
     semantic_similarity: float = 0.0
-    tests_before: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
-    tests_after: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
-    step_results: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    tests_before: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    tests_after: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    step_results: List[Dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
     test_output: str = Field(default="", sa_column=Column(Text))
     skipped_reason: Optional[str] = None
     execution_time: float = 0.0
@@ -317,11 +319,11 @@ class RepositorySettings(SQLModel, table=True):
 
     id: str = Field(default_factory=new_id, primary_key=True)
     repository_id: str = Field(sa_column=_fk("repositories.id"))
-    enabled_reviewers: list[str] = Field(
+    enabled_reviewers: List[str] = Field(
         default_factory=lambda: ["architecture", "security", "performance", "reliability", "testing"],
         sa_column=Column(JSON),
     )
-    enabled_scanners: list[str] = Field(
+    enabled_scanners: List[str] = Field(
         default_factory=lambda: ["ruff", "bandit", "mypy", "semgrep", "eslint", "tsc", "gitleaks", "osv", "npm_audit"],
         sa_column=Column(JSON),
     )
@@ -331,12 +333,12 @@ class RepositorySettings(SQLModel, table=True):
     preferred_llm_provider: Optional[str] = None
     preferred_llm_model: Optional[str] = None
     max_analysis_cost: float = 2.0
-    excluded_paths: list[str] = Field(
+    excluded_paths: List[str] = Field(
         default_factory=lambda: ["node_modules/**", "dist/**", "build/**", "**/*.min.js", ".venv/**"],
         sa_column=Column(JSON),
     )
-    custom_rules: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
-    notification_settings: dict[str, Any] = Field(
+    custom_rules: List[Dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    notification_settings: Dict[str, Any] = Field(
         default_factory=lambda: {"on_analysis_complete": True, "on_critical_finding": True},
         sa_column=Column(JSON),
     )
@@ -358,6 +360,6 @@ class AuditLog(SQLModel, table=True):
     action: str = Field(index=True)
     entity_type: str = Field(index=True)
     entity_id: Optional[str] = Field(default=None, index=True)
-    metadata_json: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    metadata_json: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     ip_address: Optional[str] = None
     created_at: datetime = Field(default_factory=utcnow, nullable=False, index=True)
