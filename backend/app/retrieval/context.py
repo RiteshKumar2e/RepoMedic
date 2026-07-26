@@ -106,7 +106,7 @@ def build_context(
     # ---- 2. index the repository ----------------------------------------
     store = VectorStore()
     all_chunks: list[Chunk] = []
-    for path, source_file in context.files.items():
+    for source_file in context.files.values():
         if not source_file.language.is_analyzable:
             continue
         chunks = chunk_file(source_file, context.symbols, context.imports)

@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, LogOut, Github, Sparkles, ExternalLink } from "lucide-react";
+import { Github, LogOut, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/Button";
 
 export function Header() {
   const { user, isAuthenticated, isDemo, demoLogin, logout, isLoggingIn } = useAuth();
@@ -15,58 +15,55 @@ export function Header() {
   };
 
   return (
-    <header className="h-14 border-b border-slate-800 bg-slate-950/60 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-20">
-      <div className="flex items-center space-x-3 text-sm">
-        <span className="text-slate-400 font-mono text-xs">RepoMedic</span>
-        <span className="text-slate-600">/</span>
-        <span className="text-slate-200 font-medium text-xs">Workspace</span>
+    <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-line bg-canvas px-6">
+      <div className="flex items-center gap-2 text-[13px]">
+        <span className="text-ink-muted">Workspace</span>
+        {isDemo && (
+          <>
+            <span className="text-ink-subtle">/</span>
+            <span className="font-medium text-ink">Demo</span>
+          </>
+        )}
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-2">
         {!isAuthenticated && (
-          <button
-            onClick={handleDemoClick}
-            disabled={isLoggingIn}
-            className="px-3 py-1.5 text-xs font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md transition-colors flex items-center gap-1.5"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            {isLoggingIn ? "Loading Demo..." : "Explore Demo Mode"}
-          </button>
+          <Button onClick={handleDemoClick} disabled={isLoggingIn} size="sm">
+            {isLoggingIn ? "Loading…" : "Explore demo"}
+          </Button>
         )}
 
         {isAuthenticated && user && (
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-xs">
+          <>
+            <span className="flex items-center gap-2 text-[13px] text-ink">
               {user.avatar_url ? (
-                <img src={user.avatar_url} alt={user.name || "User"} className="w-5 h-5 rounded-full" />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.avatar_url}
+                  alt=""
+                  className="h-5 w-5 rounded-full border border-line"
+                />
               ) : (
-                <User className="w-4 h-4 text-slate-400" />
+                <User className="h-4 w-4 text-ink-subtle" />
               )}
-              <span className="text-slate-300 font-medium">{user.login || user.name || "Developer"}</span>
-              {isDemo && (
-                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-mono">
-                  Demo
-                </span>
-              )}
-            </div>
-
-            <button
-              onClick={() => logout()}
-              title="Sign Out"
-              className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-900 rounded-md transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+              {user.login || user.name || "Developer"}
+            </span>
+            <Button variant="ghost" size="icon" onClick={() => logout()} title="Sign out">
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">Sign out</span>
+            </Button>
+          </>
         )}
 
         <a
           href="https://github.com"
           target="_blank"
           rel="noreferrer"
-          className="text-slate-400 hover:text-slate-200 p-1.5 rounded-md hover:bg-slate-900 transition-colors"
+          title="GitHub"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-surface hover:text-ink"
         >
-          <Github className="w-4 h-4" />
+          <Github className="h-4 w-4" />
+          <span className="sr-only">GitHub</span>
         </a>
       </div>
     </header>

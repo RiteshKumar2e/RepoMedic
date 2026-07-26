@@ -131,7 +131,9 @@ def scan_for_injection(content: str, *, source_label: str = "content") -> Firewa
 
     # 3. Base64-encoded instructions.
     for payload, decoded_text in _decode_base64_candidates(normalized):
-        for rule_id, pattern, confidence in _INSTRUCTION_PATTERNS:
+        # Encoded payloads score a flat high confidence: deliberately obfuscating
+        # an instruction is itself the signal, whatever the underlying pattern.
+        for rule_id, pattern, _confidence in _INSTRUCTION_PATTERNS:
             if pattern.search(decoded_text):
                 report.matches.append(
                     InjectionMatch(

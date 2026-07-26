@@ -21,6 +21,8 @@ ignore = [
     "RUF001", # em dashes and arrows are intentional in prose
     "RUF002",
     "RUF003",
+    "SIM103", # security predicates stay as explicit, commented early returns
+    "N818",   # LLMUnavailable reads better than LLMUnavailableError
 ]
 # TC (flake8-type-checking) is deliberately NOT selected: FastAPI, Pydantic and
 # SQLModel all resolve annotations at runtime, so moving imports into

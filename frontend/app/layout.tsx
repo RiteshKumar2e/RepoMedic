@@ -3,9 +3,9 @@ import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
 
 export const metadata: Metadata = {
-  title: "RepoMedic — Diagnose Code. Repair Faster. Ship Confidently.",
+  title: "RepoMedic — Diagnose code. Repair faster. Ship confidently.",
   description:
-    "Repository-aware AI code review that detects architectural, security, performance, and reliability issues—and validates every proposed fix before it reaches your branch.",
+    "Repository-aware AI code review that detects architectural, security, performance and reliability issues — and validates every proposed fix before it reaches your branch.",
 };
 
 export default function RootLayout({
@@ -14,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-slate-950 text-slate-100 antialiased selection:bg-sky-500/30">
+    <html lang="en">
+      <body className="bg-canvas text-ink antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

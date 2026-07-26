@@ -3,29 +3,31 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-1.5 rounded-md border font-medium whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-55",
   {
     variants: {
       variant: {
-        default: "bg-sky-500 text-slate-950 hover:bg-sky-400 font-semibold shadow-sm",
-        secondary: "bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700",
-        outline: "border border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800",
-        ghost: "hover:bg-slate-800 text-slate-400 hover:text-slate-200",
-        destructive: "bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20",
-        success: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20",
+        /** Primary action. One per view. */
+        default: "border-transparent bg-accent text-white hover:bg-accent-hover",
+        /** The default for most buttons: reads as a control, not a call to action. */
+        secondary: "border-line bg-canvas text-ink hover:bg-surface",
+        outline: "border-line bg-transparent text-ink hover:bg-surface",
+        ghost: "border-transparent bg-transparent text-ink-muted hover:bg-surface hover:text-ink",
+        destructive: "border-critical-line bg-canvas text-critical hover:bg-critical-soft",
+        success: "border-success-line bg-canvas text-success hover:bg-success-soft",
       },
       size: {
-        default: "h-8 px-3 py-1.5",
-        sm: "h-7 px-2.5 text-[11px]",
-        lg: "h-10 px-4 text-sm",
-        icon: "h-8 w-8",
+        default: "h-8 px-3 text-[13px]",
+        sm: "h-7 px-2.5 text-xs",
+        lg: "h-9 px-4 text-sm",
+        icon: "h-8 w-8 p-0",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "secondary",
       size: "default",
     },
-  }
+  },
 );
 
 export interface ButtonProps
@@ -33,11 +35,9 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {}
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
-    return (
-      <button className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
-    );
-  }
+  ({ className, variant, size, ...props }, ref) => (
+    <button ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props} />
+  ),
 );
 Button.displayName = "Button";
 

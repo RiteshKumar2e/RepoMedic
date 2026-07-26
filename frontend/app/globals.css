@@ -1,105 +1,270 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: #090d16;
-    --foreground: #f1f5f9;
-    --card: #0f172a;
-    --card-foreground: #f8fafc;
-    --popover: #0f172a;
-    --popover-foreground: #f8fafc;
-    --primary: #38bdf8;
-    --primary-foreground: #0f172a;
-    --secondary: #1e293b;
-    --secondary-foreground: #f8fafc;
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-    --accent: #1e293b;
-    --accent-foreground: #f8fafc;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --border: #334155;
-    --input: #1e293b;
-    --ring: #38bdf8;
-    --radius: 0.5rem;
-  }
+/* ==========================================================================
+   RepoMedic design tokens
 
-  .light {
-    --background: #f8fafc;
-    --foreground: #0f172a;
-    --card: #ffffff;
-    --card-foreground: #0f172a;
-    --popover: #ffffff;
-    --popover-foreground: #0f172a;
-    --primary: #0284c7;
-    --primary-foreground: #ffffff;
-    --secondary: #f1f5f9;
-    --secondary-foreground: #0f172a;
-    --muted: #f1f5f9;
-    --muted-foreground: #64748b;
-    --accent: #f1f5f9;
-    --accent-foreground: #0f172a;
-    --destructive: #dc2626;
-    --destructive-foreground: #ffffff;
-    --border: #e2e8f0;
-    --input: #e2e8f0;
-    --ring: #0284c7;
-  }
+   Light-first, borrowed in spirit from GitHub Primer and Linear: a white
+   canvas, one subtle grey for recessed surfaces, hairline borders, and a
+   single blue accent. Colour is reserved for severity — it is information,
+   not decoration. No gradients, no glow, no glass.
+   ========================================================================== */
+
+:root {
+  /* Surfaces */
+  --canvas: #ffffff;
+  --surface: #f6f8fa;
+  --inset: #eef1f4;
+  --overlay: #ffffff;
+
+  /* Lines */
+  --line: #d1d9e0;
+  --line-muted: #e4e8ed;
+
+  /* Text */
+  --ink: #1f2328;
+  --ink-muted: #59636e;
+  --ink-subtle: #818b98;
+  --ink-inverse: #ffffff;
+
+  /* Accent */
+  --accent: #0969da;
+  --accent-hover: #0550ae;
+  --accent-soft: #ddf4ff;
+  --accent-line: #b6e3ff;
+
+  /* Severity — the only saturated colours in the product */
+  --critical: #cf222e;
+  --critical-soft: #ffebe9;
+  --critical-line: #ffcecb;
+
+  --high: #bc4c00;
+  --high-soft: #fff1e5;
+  --high-line: #ffd8b5;
+
+  --medium: #9a6700;
+  --medium-soft: #fff8c5;
+  --medium-line: #f2e5a0;
+
+  --low: #0969da;
+  --low-soft: #ddf4ff;
+  --low-line: #b6e3ff;
+
+  --info: #59636e;
+  --info-soft: #f0f3f6;
+  --info-line: #d8dee4;
+
+  --success: #1a7f37;
+  --success-soft: #dafbe1;
+  --success-line: #aceebb;
+
+  --shadow-sm: 0 1px 0 rgba(31, 35, 40, 0.04);
+  --shadow-md: 0 3px 6px rgba(31, 35, 40, 0.08);
+  --radius: 6px;
+}
+
+.dark {
+  --canvas: #0d1117;
+  --surface: #151b23;
+  --inset: #010409;
+  --overlay: #151b23;
+
+  --line: #3d444d;
+  --line-muted: #262c36;
+
+  --ink: #e6edf3;
+  --ink-muted: #9198a1;
+  --ink-subtle: #6e7681;
+  --ink-inverse: #0d1117;
+
+  --accent: #4493f8;
+  --accent-hover: #6cb6ff;
+  --accent-soft: #121d2f;
+  --accent-line: #1f3f68;
+
+  --critical: #ff7b72;
+  --critical-soft: #1f1315;
+  --critical-line: #4b2226;
+
+  --high: #f0883e;
+  --high-soft: #1f1710;
+  --high-line: #4d2f14;
+
+  --medium: #d29922;
+  --medium-soft: #1c1810;
+  --medium-line: #453a17;
+
+  --low: #4493f8;
+  --low-soft: #121d2f;
+  --low-line: #1f3f68;
+
+  --info: #9198a1;
+  --info-soft: #161b22;
+  --info-line: #30363d;
+
+  --success: #3fb950;
+  --success-soft: #0f1e13;
+  --success-line: #1f6f2c;
+
+  --shadow-sm: 0 1px 0 rgba(1, 4, 9, 0.3);
+  --shadow-md: 0 3px 6px rgba(1, 4, 9, 0.4);
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-inset: var(--inset);
+  --color-overlay: var(--overlay);
+
+  --color-line: var(--line);
+  --color-line-muted: var(--line-muted);
+
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-ink-inverse: var(--ink-inverse);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+
+  --color-critical: var(--critical);
+  --color-critical-soft: var(--critical-soft);
+  --color-critical-line: var(--critical-line);
+
+  --color-high: var(--high);
+  --color-high-soft: var(--high-soft);
+  --color-high-line: var(--high-line);
+
+  --color-medium: var(--medium);
+  --color-medium-soft: var(--medium-soft);
+  --color-medium-line: var(--medium-line);
+
+  --color-low: var(--low);
+  --color-low-soft: var(--low-soft);
+  --color-low-line: var(--low-line);
+
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-line: var(--info-line);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-line: var(--success-line);
+
+  --radius-DEFAULT: 6px;
+
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Noto Sans", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  overflow-x: hidden;
+  background-color: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-code, pre, .font-mono {
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+code,
+pre,
+.font-mono {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
 }
 
-/* Custom Scrollbars */
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* Visible, consistent keyboard focus everywhere. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   Scrollbars — thin and unobtrusive
+   -------------------------------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.8);
-  border-radius: 4px;
+  background: var(--line);
+  border-radius: 6px;
+  border: 3px solid var(--canvas);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 1);
+  background: var(--ink-subtle);
 }
 
-/* Monaco container tweaks */
-.monaco-editor {
-  padding-top: 4px;
+/* --------------------------------------------------------------------------
+   Monaco
+   -------------------------------------------------------------------------- */
+.monaco-editor,
+.monaco-editor .margin {
+  background-color: var(--canvas) !important;
 }
 
-/* Highlights the line a finding points at (see components/code-review/DiffViewer.tsx) */
+/* Line a finding points at (components/code-review/DiffViewer.tsx) */
 .repomedic-highlight-line {
-  background: rgba(250, 204, 21, 0.12);
+  background: var(--medium-soft);
 }
 
 .repomedic-highlight-gutter {
-  background: #facc15;
+  background: var(--medium);
   width: 3px !important;
   margin-left: 3px;
 }
 
-/* Glow & Glass effects */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(51, 65, 85, 0.5);
+/* --------------------------------------------------------------------------
+   Utilities
+   -------------------------------------------------------------------------- */
+
+/* Hairline that survives fractional device pixel ratios. */
+.rule {
+  border-color: var(--line);
 }
 
-.glow-blue {
-  box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.15);
+/* Subtle striping for long scan/step lists. */
+.row-hover:hover {
+  background-color: var(--surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
