@@ -25,12 +25,14 @@ plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+norecursedirs = ["fixtures", ".workspaces", "data", ".venv", "venv"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.coverage.run]
 source = ["app"]
-omit = ["app/workers/*", "tests/*"]
+omit = ["app/workers/*", "tests/*", "fixtures/*"]
 
 [tool.coverage.report]
 show_missing = true
