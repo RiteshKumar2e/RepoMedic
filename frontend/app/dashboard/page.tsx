@@ -45,10 +45,10 @@ export default function DashboardPage() {
 
         <main className="flex-1 p-6 space-y-6 overflow-y-auto">
           {/* Welcome Banner */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-xl border border-line">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-md border border-line">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-ink">
+                <h1 className="text-xl font-semibold text-ink">
                   Welcome back, {user?.name || user?.login || "Developer"}
                 </h1>
                 {isDemo && (
@@ -73,7 +73,7 @@ export default function DashboardPage() {
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-ink-muted">Connected Repositories</p>
-                  <h3 className="text-2xl font-bold text-ink mt-1">
+                  <h3 className="text-2xl font-semibold text-ink mt-1">
                     {repositories?.length || 1}
                   </h3>
                 </div>
@@ -87,7 +87,7 @@ export default function DashboardPage() {
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-ink-muted">Total Findings</p>
-                  <h3 className="text-2xl font-bold text-ink mt-1">
+                  <h3 className="text-2xl font-semibold text-ink mt-1">
                     {analytics?.total_findings_count ?? 7}
                   </h3>
                 </div>
@@ -101,7 +101,7 @@ export default function DashboardPage() {
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-ink-muted">Fix Acceptance Rate</p>
-                  <h3 className="text-2xl font-bold text-ink mt-1">
+                  <h3 className="text-2xl font-semibold text-ink mt-1">
                     {analytics?.fix_acceptance_rate ?? 100}%
                   </h3>
                 </div>
@@ -115,7 +115,7 @@ export default function DashboardPage() {
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-ink-muted">Avg Analysis Duration</p>
-                  <h3 className="text-2xl font-bold text-ink mt-1">
+                  <h3 className="text-2xl font-semibold text-ink mt-1">
                     {formatDuration(analytics?.average_analysis_duration ?? 4.2)}
                   </h3>
                 </div>

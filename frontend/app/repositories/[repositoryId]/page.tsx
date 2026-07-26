@@ -54,7 +54,7 @@ export default function RepositoryDetailPage({ params }: { params: Promise<{ rep
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
                 <FolderGit2 className="w-5 h-5 text-accent" />
-                <h1 className="text-xl font-bold text-ink">{repo?.full_name || "ecommerce-api-demo"}</h1>
+                <h1 className="text-xl font-semibold text-ink">{repo?.full_name || "ecommerce-api-demo"}</h1>
                 <Badge variant="outline" className="font-mono">
                   {repo?.primary_language || "Python"}
                 </Badge>

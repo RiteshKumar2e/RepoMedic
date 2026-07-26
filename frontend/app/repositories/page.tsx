@@ -38,7 +38,7 @@ export default function RepositoriesPage() {
         <main className="flex-1 p-6 space-y-6 overflow-y-auto">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-ink">Connected Repositories</h1>
+              <h1 className="text-xl font-semibold text-ink">Connected Repositories</h1>
               <p className="text-xs text-ink-muted mt-1">Manage scanned repositories and review configurations</p>
             </div>
           </div>

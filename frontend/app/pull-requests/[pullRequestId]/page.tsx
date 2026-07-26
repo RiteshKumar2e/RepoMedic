@@ -49,13 +49,13 @@ export default function PullRequestDetailPage({ params }: { params: Promise<{ pu
 
         <main className="flex-1 p-6 space-y-6 overflow-y-auto">
           {/* PR Header */}
-          <div className="p-6 rounded-xl border border-line bg-surface space-y-4">
+          <div className="p-6 rounded-md border border-line bg-surface space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center space-x-3">
                   <GitPullRequest className="w-6 h-6 text-success" />
                   <span className="font-mono text-ink-muted text-sm">#{prNumber}</span>
-                  <h1 className="text-xl font-bold text-ink">{title}</h1>
+                  <h1 className="text-xl font-semibold text-ink">{title}</h1>
                 </div>
                 <div className="flex items-center space-x-3 text-xs text-ink-muted font-mono">
                   <span>Author: @{author}</span>

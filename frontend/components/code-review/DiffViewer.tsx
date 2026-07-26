@@ -84,7 +84,7 @@ export function DiffViewer({
               Proposed fix
             </span>
           ) : (
-            <span className="text-slate-400 text-[10px]">Original</span>
+            <span className="text-[10px] text-ink-muted">Original</span>
           )}
         </div>
       </div>
@@ -94,7 +94,7 @@ export function DiffViewer({
           <DiffEditor
             height="100%"
             language={language}
-            theme="vs-dark"
+            theme="vs"
             original={originalCode}
             modified={suggestedCode ?? ""}
             options={{
@@ -109,7 +109,7 @@ export function DiffViewer({
           <Editor
             height="100%"
             language={language}
-            theme="vs-dark"
+            theme="vs"
             value={originalCode}
             onMount={handleMount}
             options={{ ...sharedOptions, lineNumbers: "on" }}

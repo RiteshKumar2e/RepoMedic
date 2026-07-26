@@ -43,10 +43,10 @@ export default function LoginPage() {
     <div className="min-h-screen bg-canvas flex flex-col items-center justify-center p-6 relative">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-accent-soft border border-accent-line flex items-center justify-center text-accent mx-auto mb-3">
+          <div className="w-12 h-12 rounded-md bg-accent-soft border border-accent-line flex items-center justify-center text-accent mx-auto mb-3">
             <ShieldCheck className="w-7 h-7" />
           </div>
-          <h1 className="text-2xl font-bold text-ink">Welcome to RepoMedic</h1>
+          <h1 className="text-2xl font-semibold text-ink">Welcome to RepoMedic</h1>
           <p className="text-xs text-ink-muted mt-1">Connect your account or explore seeded demo mode</p>
         </div>
 

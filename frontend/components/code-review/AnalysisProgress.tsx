@@ -33,7 +33,7 @@ export function AnalysisProgress({ stage, progress, message, liveEvent }: Analys
             style={{ width: `${progress}%` }}
           />
         </div>
-        <span className="text-accent font-bold text-[11px]">{progress}%</span>
+        <span className="text-accent font-semibold text-[11px]">{progress}%</span>
       </div>
     </div>
   );

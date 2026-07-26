@@ -38,7 +38,7 @@ export default function SettingsPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-ink flex items-center gap-2">
+              <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
                 <Settings className="w-5 h-5 text-accent" /> Platform & Review Settings
               </h1>
               <p className="text-xs text-ink-muted mt-1">
