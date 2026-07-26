@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -38,7 +36,7 @@ class ActivityItem(BaseModel):
     id: str
     action: str
     entity_type: str
-    entity_id: Optional[str] = None
+    entity_id: str | None = None
     summary: str
     created_at: str
 

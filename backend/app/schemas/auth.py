@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -20,10 +19,10 @@ class GitHubAuthStartResponse(BaseModel):
 
 class UserRead(BaseModel):
     id: str
-    login: Optional[str] = None
-    name: Optional[str] = None
-    email: Optional[str] = None
-    avatar_url: Optional[str] = None
+    login: str | None = None
+    name: str | None = None
+    email: str | None = None
+    avatar_url: str | None = None
     is_demo: bool = False
     created_at: datetime
 
@@ -34,7 +33,7 @@ class SessionResponse(BaseModel):
     user: UserRead
     authenticated: bool = True
     github_connected: bool = False
-    token: Optional[str] = None
+    token: str | None = None
 
 
 class DemoLoginResponse(SessionResponse):

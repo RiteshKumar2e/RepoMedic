@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Optional
 
 from sqlmodel import Session, select
 
@@ -72,7 +71,7 @@ DEMO_HEAD_SHA = "f0e9d8c7b6a5948372615049382716059483726f"
 # --------------------------------------------------------------------------- #
 # Entry point
 # --------------------------------------------------------------------------- #
-async def seed_demo_workspace(force: bool = False) -> Optional[str]:
+async def seed_demo_workspace(force: bool = False) -> str | None:
     """Create the demo repository, pull request and analysis. Idempotent."""
     if not FIXTURE_ROOT.is_dir():
         logger.warning("demo.fixture_missing", path=str(FIXTURE_ROOT))

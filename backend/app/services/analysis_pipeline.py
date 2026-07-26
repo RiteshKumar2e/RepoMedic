@@ -17,7 +17,6 @@ import asyncio
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional
 
 from sqlmodel import Session, select
 
@@ -30,7 +29,6 @@ from app.core.logging import get_logger
 from app.domain.types import (
     AnalysisContext,
     FileChange,
-    Language,
     SourceFile,
     UnifiedFinding,
 )
@@ -61,7 +59,8 @@ from app.models.enums import (
 from app.retrieval.context import build_context, diff_only_context
 from app.scanners.base import ScanRequest
 from app.scanners.registry import run_scanners
-from app.services import audit, detection, events, workspace as workspace_service
+from app.services import audit, detection, events
+from app.services import workspace as workspace_service
 from app.services.dedupe import merge_findings
 from app.services.duplication import detect_duplicate_logic
 from app.services.repositories import get_or_create_settings
@@ -80,7 +79,7 @@ class PipelineResult:
     findings: list[UnifiedFinding] = field(default_factory=list)
     patches_created: int = 0
     patches_validated: int = 0
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class AnalysisPipeline:
@@ -90,11 +89,11 @@ class AnalysisPipeline:
         self.pull_request: PullRequest = session.get(PullRequest, analysis.pull_request_id)
         self.repository: Repository = session.get(Repository, self.pull_request.repository_id)
         self.settings_row = get_or_create_settings(session, self.repository)
-        self.workspace: Optional[workspace_service.Workspace] = None
+        self.workspace: workspace_service.Workspace | None = None
         self.usage = UsageTracker(
             budget_usd=min(self.settings_row.max_analysis_cost, settings.max_analysis_cost_usd)
         )
-        self.graph: Optional[KnowledgeGraph] = None
+        self.graph: KnowledgeGraph | None = None
         self._stage_started = time.perf_counter()
 
     # ---- progress --------------------------------------------------------
@@ -380,7 +379,7 @@ class AnalysisPipeline:
         for scan_result in results:
             findings.extend(scan_result.findings)
 
-        self.analysis.scanners_run = sorted(set(ran + ["ast_rules"]))
+        self.analysis.scanners_run = sorted(set([*ran, "ast_rules"]))
         self.session.add(self.analysis)
         self.session.commit()
         logger.info("pipeline.deterministic_complete", findings=len(findings), scanners=ran)
@@ -467,7 +466,7 @@ class AnalysisPipeline:
                     title="Circular import cycle involving changed files",
                     description=(
                         "These modules import each other in a cycle: "
-                        + " → ".join(cycle + [cycle[0]])
+                        + " → ".join([*cycle, cycle[0]])
                         + ". Cycles make import order significant, break isolated testing, and "
                         "produce partially-initialised modules at runtime."
                     ),
@@ -818,7 +817,7 @@ def create_analysis(session: Session, pull_request: PullRequest, *, triggered_by
     return analysis
 
 
-def latest_analysis(session: Session, pull_request_id: str) -> Optional[Analysis]:
+def latest_analysis(session: Session, pull_request_id: str) -> Analysis | None:
     return session.exec(
         select(Analysis)
         .where(Analysis.pull_request_id == pull_request_id)

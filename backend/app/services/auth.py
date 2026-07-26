@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from sqlmodel import Session, select
 
@@ -17,7 +17,7 @@ DEMO_USER_LOGIN = "demo-user"
 DEMO_USER_EMAIL = "demo@repomedic.dev"
 
 
-def upsert_github_user(session: Session, profile: dict[str, Any], email: Optional[str]) -> User:
+def upsert_github_user(session: Session, profile: dict[str, Any], email: str | None) -> User:
     user = session.exec(select(User).where(User.github_user_id == profile["id"])).first()
     if user is None:
         user = User(github_user_id=profile["id"])
@@ -38,7 +38,7 @@ def store_oauth_installation(
     access_token: str,
     *,
     scopes: str = "",
-    installation_id: Optional[int] = None,
+    installation_id: int | None = None,
 ) -> GitHubInstallation:
     """Persist the GitHub credential, encrypted at rest."""
     installation = session.exec(

@@ -10,7 +10,7 @@ import hashlib
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from app.models.enums import FindingCategory, FindingSource, RiskLevel, Severity
 
@@ -26,7 +26,7 @@ class Language(str, Enum):
     UNKNOWN = "unknown"
 
     @classmethod
-    def from_path(cls, path: str) -> "Language":
+    def from_path(cls, path: str) -> Language:
         suffix = path.rsplit(".", 1)[-1].lower() if "." in path else ""
         return {
             "py": cls.PYTHON,
@@ -79,7 +79,7 @@ class Symbol:
     end_line: int
     signature: str = ""
     docstring: str = ""
-    parent: Optional[str] = None
+    parent: str | None = None
     decorators: list[str] = field(default_factory=list)
     is_async: bool = False
     complexity: int = 1
@@ -97,7 +97,7 @@ class ImportRef:
     file_path: str = ""
     line: int = 1
     is_relative: bool = False
-    resolved_path: Optional[str] = None
+    resolved_path: str | None = None
 
 
 @dataclass(slots=True)
@@ -138,7 +138,7 @@ class FileChange:
     additions: int = 0
     deletions: int = 0
     patch: str = ""
-    previous_path: Optional[str] = None
+    previous_path: str | None = None
     changed_lines: set[int] = field(default_factory=set)
 
     @property
@@ -199,7 +199,7 @@ class UnifiedFinding:
     end_line: int
     source: FindingSource
     rule_id: str = ""
-    cwe: Optional[str] = None
+    cwe: str | None = None
     risk: str = ""
     recommendation: str = ""
     code_snippet: str = ""
@@ -208,7 +208,7 @@ class UnifiedFinding:
     related_files: list[str] = field(default_factory=list)
     corroborating_sources: list[str] = field(default_factory=list)
     score_breakdown: dict[str, float] = field(default_factory=dict)
-    suggested_patch: Optional["PatchProposal"] = None
+    suggested_patch: PatchProposal | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -268,7 +268,7 @@ class AnalysisContext:
     def changed_paths(self) -> list[str]:
         return [c.path for c in self.changes if not c.is_deleted]
 
-    def file(self, path: str) -> Optional[SourceFile]:
+    def file(self, path: str) -> SourceFile | None:
         return self.files.get(path)
 
     def changed_source_files(self) -> list[SourceFile]:

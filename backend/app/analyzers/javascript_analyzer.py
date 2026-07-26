@@ -8,7 +8,7 @@ scoring layer discounts every finding derived from it.
 from __future__ import annotations
 
 import re
-from typing import Any, Optional
+from typing import Any
 
 from app.analyzers.base import AnalyzerContext, ParseResult
 from app.analyzers.javascript_rules import JavaScriptRuleEngine
@@ -201,7 +201,7 @@ class JavaScriptAnalyzer:
         return JavaScriptRuleEngine(context, degraded=context.parse.degraded).run()
 
     # ---- patching --------------------------------------------------------
-    def apply_patch(self, source_code: str, patch: PatchProposal) -> Optional[str]:
+    def apply_patch(self, source_code: str, patch: PatchProposal) -> str | None:
         original = patch.original_code.strip("\n")
         if not original:
             return None
@@ -240,7 +240,7 @@ def _symbol(
     node: Any,
     signature: str = "",
     is_async: bool = False,
-    parent: Optional[str] = None,
+    parent: str | None = None,
 ) -> Symbol:
     return Symbol(
         name=name,
@@ -271,7 +271,7 @@ def _function_name(node: Any, source: bytes) -> str:
     return _identifier(node, source)
 
 
-def _enclosing_class(node: Any, source: bytes) -> Optional[str]:
+def _enclosing_class(node: Any, source: bytes) -> str | None:
     current = node.parent
     while current is not None:
         if current.type in _CLASS_NODES:
@@ -280,7 +280,7 @@ def _enclosing_class(node: Any, source: bytes) -> Optional[str]:
     return None
 
 
-def _first_error_node(node: Any) -> Optional[Any]:
+def _first_error_node(node: Any) -> Any | None:
     for child in walk(node):
         if child.type == "ERROR" or getattr(child, "is_missing", False):
             return child
@@ -339,7 +339,7 @@ def _lexical_syntax_check(source_code: str) -> tuple[bool, str]:
     pairs = {"{": "}", "(": ")", "[": "]"}
     stack: list[tuple[str, int]] = []
     line = 1
-    in_string: Optional[str] = None
+    in_string: str | None = None
     escaped = False
     index = 0
     while index < len(source_code):

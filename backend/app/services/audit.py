@@ -6,7 +6,7 @@ records an entry so the platform can answer "who changed what, when, and why".
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from sqlmodel import Session, select
 
@@ -21,10 +21,10 @@ def record(
     *,
     action: str,
     entity_type: str,
-    entity_id: Optional[str] = None,
-    user_id: Optional[str] = None,
-    metadata: Optional[dict[str, Any]] = None,
-    ip_address: Optional[str] = None,
+    entity_id: str | None = None,
+    user_id: str | None = None,
+    metadata: dict[str, Any] | None = None,
+    ip_address: str | None = None,
     commit: bool = True,
 ) -> AuditLog:
     entry = AuditLog(
@@ -43,7 +43,7 @@ def record(
     return entry
 
 
-def recent(session: Session, *, limit: int = 20, user_id: Optional[str] = None) -> list[AuditLog]:
+def recent(session: Session, *, limit: int = 20, user_id: str | None = None) -> list[AuditLog]:
     statement = select(AuditLog).order_by(AuditLog.created_at.desc()).limit(limit)
     if user_id:
         statement = (

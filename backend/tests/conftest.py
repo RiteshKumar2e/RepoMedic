@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import os
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import pytest
 
@@ -27,7 +27,7 @@ os.environ["ALLOW_HOST_TEST_EXECUTION"] = "false"
 
 
 @pytest.fixture(scope="session")
-def client() -> Iterator["TestClient"]:  # noqa: F821
+def client() -> Iterator[TestClient]:  # noqa: F821
     """A TestClient with the lifespan run, so the demo workspace is seeded."""
     from fastapi.testclient import TestClient
 

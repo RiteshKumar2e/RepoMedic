@@ -9,7 +9,7 @@ derived from them. Nothing silently pretends to be an AST.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Any
 
 from app.core.logging import get_logger
 
@@ -24,7 +24,7 @@ _GRAMMAR_LOADERS = {
 
 
 @lru_cache(maxsize=8)
-def get_parser(language: str) -> Optional[Any]:
+def get_parser(language: str) -> Any | None:
     """Return a configured ``tree_sitter.Parser``, or ``None`` if unavailable."""
     entry = _GRAMMAR_LOADERS.get(language)
     if entry is None:
@@ -32,7 +32,8 @@ def get_parser(language: str) -> Optional[Any]:
     module_name, factory_name = entry
 
     try:
-        from tree_sitter import Language as TSLanguage, Parser as TSParser
+        from tree_sitter import Language as TSLanguage
+        from tree_sitter import Parser as TSParser
     except ImportError:
         logger.info("treesitter.unavailable", reason="tree_sitter package not installed")
         return None
@@ -78,7 +79,7 @@ def find_children(node: Any, *types: str) -> list[Any]:
     return [child for child in node.children if child.type in types]
 
 
-def first_child(node: Any, *types: str) -> Optional[Any]:
+def first_child(node: Any, *types: str) -> Any | None:
     for child in node.children:
         if child.type in types:
             return child

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Query
 from sqlmodel import select
 
@@ -16,7 +14,7 @@ from app.schemas.graph import GraphResponse, ImpactPath
 router = APIRouter(prefix="/repositories", tags=["graph"])
 
 
-def _latest_graph_analysis(session, repository_id: str) -> Optional[Analysis]:
+def _latest_graph_analysis(session, repository_id: str) -> Analysis | None:
     pr_ids = [
         row.id
         for row in session.exec(select(PullRequest).where(PullRequest.repository_id == repository_id))
@@ -42,7 +40,7 @@ def get_repository_graph(
     repository_id: str,
     user: CurrentUser,
     session: SessionDep,
-    node_types: Optional[list[str]] = Query(default=None),
+    node_types: list[str] | None = Query(default=None),
     limit: int = Query(default=600, ge=10, le=1200),
 ) -> GraphResponse:
     repository = load_repository(repository_id, session, user)

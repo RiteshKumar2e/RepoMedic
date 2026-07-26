@@ -13,12 +13,12 @@ breaking-change findings.
 from __future__ import annotations
 
 from collections import defaultdict, deque
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import PurePosixPath
-from typing import Iterable, Optional
 
 from app.core.logging import get_logger
-from app.domain.types import CallRef, ImportRef, Language, SourceFile, Symbol, SymbolKind
+from app.domain.types import CallRef, ImportRef, SourceFile, Symbol, SymbolKind
 
 logger = get_logger(__name__)
 
@@ -140,11 +140,11 @@ class KnowledgeGraph:
                 continue
             for edge in self._out.get(path[-1], []):
                 if edge.target == goal:
-                    return path + [goal]
+                    return [*path, goal]
                 if edge.target in seen:
                     continue
                 seen.add(edge.target)
-                queue.append(path + [edge.target])
+                queue.append([*path, edge.target])
         return []
 
     def circular_imports(self) -> list[list[str]]:
@@ -211,8 +211,8 @@ def build_graph(
     imports: Iterable[ImportRef],
     calls: Iterable[CallRef],
     *,
-    changed_paths: Optional[set[str]] = None,
-    dependencies: Optional[dict[str, str]] = None,
+    changed_paths: set[str] | None = None,
+    dependencies: dict[str, str] | None = None,
 ) -> KnowledgeGraph:
     graph = KnowledgeGraph()
     changed_paths = changed_paths or set()
@@ -345,7 +345,7 @@ def build_graph(
 _JS_EXTENSIONS = (".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs")
 
 
-def _resolve_import(ref: ImportRef, known_paths: set[str]) -> Optional[str]:
+def _resolve_import(ref: ImportRef, known_paths: set[str]) -> str | None:
     """Best-effort resolution of a module specifier to a repository file."""
     module = ref.module
     if not module:

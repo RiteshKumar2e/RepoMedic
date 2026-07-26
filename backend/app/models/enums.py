@@ -39,7 +39,7 @@ class Severity(str, Enum):
         }[self]
 
     @classmethod
-    def at_least(cls, threshold: "Severity") -> set["Severity"]:
+    def at_least(cls, threshold: Severity) -> set[Severity]:
         return {s for s in cls if s.rank >= threshold.rank}
 
 

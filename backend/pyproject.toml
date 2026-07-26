@@ -2,17 +2,40 @@
 name = "repomedic-backend"
 version = "0.1.0"
 description = "RepoMedic — AI-powered repository-aware code review and auto-fix platform"
-requires-python = ">=3.11"
+# 3.10 is the floor: `datetime.UTC` and other 3.11-only spellings must not be
+# introduced, or the app fails to import on a 3.10 interpreter.
+requires-python = ">=3.10"
 license = { text = "MIT" }
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py310"
 line-length = 110
 src = ["app", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM", "TCH", "RUF"]
-ignore = ["E501", "B008"]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM", "RUF"]
+ignore = [
+    "E501",   # line length is the formatter's job
+    "B008",   # FastAPI's Depends()-in-default is the framework idiom
+    "RUF012", # SQLModel/Pydantic use Field(default_factory=...) for mutable defaults
+    "RUF001", # em dashes and arrows are intentional in prose
+    "RUF002",
+    "RUF003",
+]
+# TC (flake8-type-checking) is deliberately NOT selected: FastAPI, Pydantic and
+# SQLModel all resolve annotations at runtime, so moving imports into
+# `if TYPE_CHECKING` blocks breaks dependency injection and model building.
+
+[tool.ruff.lint.per-file-ignores]
+# SQLModel inspects real annotation objects when building mappers. Rewriting
+# `List["Repository"]` to `list["Repository"]` makes SQLAlchemy raise
+# "seems to be using a generic class as the argument to relationship()".
+"app/models/entities.py" = ["UP006", "UP035", "UP007"]
+# `visit_Call`, `visit_FunctionDef` etc. are required names from ast.NodeVisitor.
+"app/analyzers/python_rules.py" = ["N802"]
+"app/analyzers/python_analyzer.py" = ["N802"]
+# The demo corpus is intentionally defective; it is analysed, never imported.
+"fixtures/**" = ["ALL"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]

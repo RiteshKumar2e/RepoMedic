@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from app.analyzers.base import AnalyzerContext
 from app.analyzers.treesitter import node_text, walk
@@ -70,7 +70,7 @@ class JavaScriptRuleEngine:
         rule_id: str,
         risk: str,
         recommendation: str,
-        cwe: Optional[str] = None,
+        cwe: str | None = None,
         confidence: float = 0.0,
     ) -> None:
         if not self.context.touches_changed_lines(hit.line, hit.end_line):

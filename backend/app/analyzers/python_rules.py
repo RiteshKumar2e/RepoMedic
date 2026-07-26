@@ -9,7 +9,6 @@ types, scope, loop nesting and async context. That is what lets RepoMedic say
 from __future__ import annotations
 
 import ast
-from typing import Optional
 
 from app.analyzers.base import AnalyzerContext
 from app.domain.types import UnifiedFinding
@@ -92,9 +91,9 @@ class PythonRuleVisitor(ast.NodeVisitor):
         rule_id: str,
         risk: str,
         recommendation: str,
-        cwe: Optional[str] = None,
+        cwe: str | None = None,
         confidence: float = 0.0,
-        end_node: Optional[ast.AST] = None,
+        end_node: ast.AST | None = None,
     ) -> None:
         start = getattr(node, "lineno", 1)
         end = getattr(end_node or node, "end_lineno", start) or start
@@ -556,7 +555,7 @@ class PythonRuleVisitor(ast.NodeVisitor):
     def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
         is_bare = node.type is None
         is_broad = isinstance(node.type, ast.Name) and node.type.id in ("Exception", "BaseException")
-        swallows = all(isinstance(stmt, (ast.Pass, ast.Continue)) for stmt in node.body) or (
+        swallows = all(isinstance(stmt, ast.Pass | ast.Continue) for stmt in node.body) or (
             len(node.body) == 1 and isinstance(node.body[0], ast.Expr)
             and isinstance(node.body[0].value, ast.Constant)
         )
@@ -655,7 +654,7 @@ class PythonRuleVisitor(ast.NodeVisitor):
                 )
         self.generic_visit(node)
 
-    def _current_body(self, node: ast.AST) -> Optional[list]:
+    def _current_body(self, node: ast.AST) -> list | None:
         for scope in reversed(self._scope):
             body = getattr(scope, "body", None)
             if isinstance(body, list) and node in body:
@@ -666,7 +665,7 @@ class PythonRuleVisitor(ast.NodeVisitor):
 # --------------------------------------------------------------------------- #
 # AST helpers
 # --------------------------------------------------------------------------- #
-def _name_of(node: Optional[ast.AST]) -> str:
+def _name_of(node: ast.AST | None) -> str:
     if node is None:
         return ""
     if isinstance(node, ast.Name):
@@ -692,7 +691,7 @@ def _is_route(decorators: list[str]) -> bool:
     return False
 
 
-def _interpolation_kind(node: ast.AST) -> Optional[str]:
+def _interpolation_kind(node: ast.AST) -> str | None:
     """Describe how a string expression was built, if it is dynamic."""
     if isinstance(node, ast.JoinedStr):
         return "an f-string" if any(isinstance(v, ast.FormattedValue) for v in node.values) else None
@@ -731,7 +730,7 @@ def _call_chain(node: ast.Call) -> list[str]:
     """Method names in a fluent chain, e.g. ``session.query(X).filter(...).all()``."""
     chain: list[str] = []
     current: ast.AST = node
-    while isinstance(current, (ast.Call, ast.Attribute)):
+    while isinstance(current, ast.Call | ast.Attribute):
         if isinstance(current, ast.Attribute):
             chain.append(current.attr)
             current = current.value

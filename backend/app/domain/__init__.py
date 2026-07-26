@@ -1,6 +1,6 @@
 """Framework-free domain types shared by analyzers, scanners, agents and patching."""
 
-from app.domain.types import (  # noqa: F401
+from app.domain.types import (
     AnalysisContext,
     CallRef,
     FileChange,

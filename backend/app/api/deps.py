@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 import jwt
 from fastapi import Depends, Request
@@ -11,6 +11,7 @@ from sqlmodel import Session, select
 from app.core.config import settings
 from app.core.errors import AuthenticationError, AuthorizationError, NotFoundError
 from app.core.rate_limit import check_rate_limit
+from app.core.security import decode_session_token
 from app.db.session import get_session
 from app.models.entities import (
     Analysis,
@@ -21,12 +22,11 @@ from app.models.entities import (
     Repository,
     User,
 )
-from app.core.security import decode_session_token
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
-def _extract_token(request: Request) -> Optional[str]:
+def _extract_token(request: Request) -> str | None:
     header = request.headers.get("authorization", "")
     if header.lower().startswith("bearer "):
         return header[7:].strip()
@@ -54,14 +54,14 @@ def get_current_user(request: Request, session: SessionDep) -> User:
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-def get_optional_user(request: Request, session: SessionDep) -> Optional[User]:
+def get_optional_user(request: Request, session: SessionDep) -> User | None:
     try:
         return get_current_user(request, session)
     except AuthenticationError:
         return None
 
 
-OptionalUser = Annotated[Optional[User], Depends(get_optional_user)]
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
 
 
 def rate_limiter(request: Request) -> None:

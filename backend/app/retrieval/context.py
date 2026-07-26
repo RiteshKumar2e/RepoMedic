@@ -17,7 +17,6 @@ delimiters, and a manifest records exactly what left the process.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -44,7 +43,7 @@ class ContextBundle:
     injection_flags: list[dict] = field(default_factory=list)
     total_tokens: int = 0
 
-    def render(self, *, max_tokens: Optional[int] = None) -> str:
+    def render(self, *, max_tokens: int | None = None) -> str:
         """Render the context block that goes into the prompt."""
         budget = max_tokens or settings.max_context_tokens
         parts: list[str] = [
@@ -75,10 +74,10 @@ class ContextBundle:
 
 def build_context(
     context: AnalysisContext,
-    graph: Optional[KnowledgeGraph] = None,
+    graph: KnowledgeGraph | None = None,
     *,
-    max_files: Optional[int] = None,
-    max_tokens: Optional[int] = None,
+    max_files: int | None = None,
+    max_tokens: int | None = None,
 ) -> ContextBundle:
     max_files = max_files or settings.max_context_files
     max_tokens = max_tokens or settings.max_context_tokens

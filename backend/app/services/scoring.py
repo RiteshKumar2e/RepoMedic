@@ -16,7 +16,6 @@ Fix confidence (0-100)::
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from app.domain.types import AnalysisContext, UnifiedFinding
 from app.models.enums import FindingCategory, RiskLevel, Severity
@@ -36,7 +35,7 @@ AUTO_APPLY_MIN_CONFIDENCE = 85.0
 AUTO_APPLY_MAX_LINES = 30
 
 
-def contextual_relevance(finding: UnifiedFinding, context: Optional[AnalysisContext]) -> float:
+def contextual_relevance(finding: UnifiedFinding, context: AnalysisContext | None) -> float:
     """How much this finding matters *for this change*, 0.4 – 1.0.
 
     A defect on a line the PR actually touched is more actionable than one that
@@ -88,7 +87,7 @@ def reproducibility_factor(finding: UnifiedFinding) -> float:
 
 
 def score_finding(
-    finding: UnifiedFinding, context: Optional[AnalysisContext] = None
+    finding: UnifiedFinding, context: AnalysisContext | None = None
 ) -> UnifiedFinding:
     """Compute and attach the score plus its breakdown. Mutates and returns."""
     severity_weight = finding.severity.weight
@@ -110,7 +109,7 @@ def score_finding(
 
 
 def rank_findings(
-    findings: list[UnifiedFinding], context: Optional[AnalysisContext] = None
+    findings: list[UnifiedFinding], context: AnalysisContext | None = None
 ) -> list[UnifiedFinding]:
     for finding in findings:
         score_finding(finding, context)
@@ -124,14 +123,14 @@ def rank_findings(
 # ---- fix confidence ------------------------------------------------------- #
 @dataclass(slots=True)
 class ValidationSignals:
-    syntax_validation: Optional[bool] = None
-    lint_success: Optional[bool] = None
-    typecheck_success: Optional[bool] = None
-    test_success: Optional[bool] = None
-    security_scan_success: Optional[bool] = None
+    syntax_validation: bool | None = None
+    lint_success: bool | None = None
+    typecheck_success: bool | None = None
+    test_success: bool | None = None
+    security_scan_success: bool | None = None
     semantic_similarity: float = 0.0
 
-    def as_dict(self) -> dict[str, Optional[bool] | float]:
+    def as_dict(self) -> dict[str, bool | None | float]:
         return {
             "syntax_validation": self.syntax_validation,
             "lint_success": self.lint_success,

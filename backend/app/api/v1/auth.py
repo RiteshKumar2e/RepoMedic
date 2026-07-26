@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi import APIRouter, Query, Request, Response
 from fastapi.responses import RedirectResponse
 from sqlmodel import select
 
@@ -21,7 +21,8 @@ from app.schemas.auth import (
     UserRead,
 )
 from app.schemas.common import Acknowledgement
-from app.services import audit, auth as auth_service
+from app.services import audit
+from app.services import auth as auth_service
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])

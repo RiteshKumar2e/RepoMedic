@@ -7,7 +7,7 @@ All network access to GitHub goes through this class.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
@@ -30,12 +30,12 @@ class GitHubClient:
             repos = await gh.list_repositories()
     """
 
-    def __init__(self, token: str, *, base_url: Optional[str] = None) -> None:
+    def __init__(self, token: str, *, base_url: str | None = None) -> None:
         self._token = token
         self._base_url = (base_url or settings.github_api_url).rstrip("/")
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
-    async def __aenter__(self) -> "GitHubClient":
+    async def __aenter__(self) -> GitHubClient:
         self._client = httpx.AsyncClient(
             base_url=self._base_url,
             timeout=httpx.Timeout(30.0, connect=10.0),
@@ -58,7 +58,7 @@ class GitHubClient:
         if self._client is None:
             raise RuntimeError("GitHubClient must be used as an async context manager")
 
-        last_error: Optional[Exception] = None
+        last_error: Exception | None = None
         for attempt in range(_MAX_RETRIES):
             try:
                 response = await self._client.request(method, path, **kwargs)
@@ -210,7 +210,7 @@ class GitHubClient:
             json={"ref": f"refs/heads/{branch}", "sha": from_sha},
         )
 
-    async def get_file_sha(self, owner: str, repo: str, path: str, ref: str) -> Optional[str]:
+    async def get_file_sha(self, owner: str, repo: str, path: str, ref: str) -> str | None:
         try:
             data = await self.get(f"/repos/{owner}/{repo}/contents/{path}", params={"ref": ref})
             return data.get("sha") if isinstance(data, dict) else None
@@ -225,7 +225,7 @@ class GitHubClient:
         content: str,
         message: str,
         branch: str,
-        sha: Optional[str] = None,
+        sha: str | None = None,
     ) -> dict:
         import base64
 
@@ -254,8 +254,8 @@ class GitHubClient:
         head_sha: str,
         name: str,
         status: str = "in_progress",
-        conclusion: Optional[str] = None,
-        output: Optional[dict] = None,
+        conclusion: str | None = None,
+        output: dict | None = None,
     ) -> dict:
         payload: dict[str, Any] = {"name": name, "head_sha": head_sha, "status": status}
         if conclusion:
@@ -275,7 +275,7 @@ class GitHubClient:
         return list(data.get("check_runs", []))
 
 
-def _next_link(link_header: str) -> Optional[str]:
+def _next_link(link_header: str) -> str | None:
     for part in link_header.split(","):
         section = part.split(";")
         if len(section) < 2:

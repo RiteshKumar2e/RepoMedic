@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import pytest
-
 from app.security.firewall import scan_for_injection
 
 

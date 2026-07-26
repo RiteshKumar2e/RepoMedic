@@ -7,7 +7,6 @@ layer never talks to GitHub directly.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from sqlmodel import Session, select
 
@@ -23,7 +22,7 @@ from app.models.enums import PullRequestStatus
 logger = get_logger(__name__)
 
 
-def _parse_dt(value: Optional[str]) -> datetime:
+def _parse_dt(value: str | None) -> datetime:
     if not value:
         return utcnow()
     try:

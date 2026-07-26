@@ -11,9 +11,11 @@ Swap in a hosted or local neural embedder by implementing :class:`Embedder`.
 from __future__ import annotations
 
 import hashlib
+import itertools
 import math
 import re
-from typing import Protocol, Sequence
+from collections.abc import Sequence
+from typing import Protocol
 
 DIMENSIONS = 512
 
@@ -60,7 +62,7 @@ class HashingEmbedder:
         for token in tokens:
             counts[token] = counts.get(token, 0) + 1
         # Bigrams capture call shapes such as `cursor execute`.
-        for first, second in zip(tokens, tokens[1:]):
+        for first, second in itertools.pairwise(tokens):
             bigram = f"{first}~{second}"
             counts[bigram] = counts.get(bigram, 0) + 1
 
@@ -82,7 +84,7 @@ class HashingEmbedder:
 def cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
     if not a or not b or len(a) != len(b):
         return 0.0
-    dot = sum(x * y for x, y in zip(a, b))
+    dot = sum(x * y for x, y in zip(a, b, strict=False))
     # Vectors from HashingEmbedder are already unit length.
     return max(-1.0, min(1.0, dot))
 

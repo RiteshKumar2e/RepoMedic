@@ -8,7 +8,6 @@ hosted vector database means implementing the same three methods.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from app.retrieval.chunking import Chunk
 from app.retrieval.embeddings import Embedder, cosine_similarity, get_embedder
@@ -22,7 +21,7 @@ class ScoredChunk:
 
 
 class VectorStore:
-    def __init__(self, embedder: Optional[Embedder] = None) -> None:
+    def __init__(self, embedder: Embedder | None = None) -> None:
         self._embedder = embedder or get_embedder()
         self._chunks: list[Chunk] = []
         self._vectors: list[list[float]] = []
@@ -40,7 +39,7 @@ class VectorStore:
         query: str,
         *,
         top_k: int = 12,
-        exclude_paths: Optional[set[str]] = None,
+        exclude_paths: set[str] | None = None,
         min_score: float = 0.05,
     ) -> list[ScoredChunk]:
         if not self._chunks:
@@ -49,7 +48,7 @@ class VectorStore:
         exclude_paths = exclude_paths or set()
 
         scored: list[ScoredChunk] = []
-        for chunk, vector in zip(self._chunks, self._vectors):
+        for chunk, vector in zip(self._chunks, self._vectors, strict=False):
             if chunk.file_path in exclude_paths:
                 continue
             score = cosine_similarity(query_vector, vector)

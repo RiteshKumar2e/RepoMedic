@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from typing import Optional
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -82,7 +81,7 @@ def _run_in_thread(analysis_id: str) -> None:
 
 def run_coroutine(coro) -> None:
     """Run a coroutine on a private event loop inside a worker thread."""
-    loop: Optional[asyncio.AbstractEventLoop] = None
+    loop: asyncio.AbstractEventLoop | None = None
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)

@@ -4,7 +4,7 @@ Importing this package registers every table on ``SQLModel.metadata`` which is
 what Alembic autogenerate and ``init_db`` rely on.
 """
 
-from app.models.entities import (  # noqa: F401
+from app.models.entities import (
     Analysis,
     AuditLog,
     Finding,
@@ -17,7 +17,7 @@ from app.models.entities import (  # noqa: F401
     User,
     ValidationRun,
 )
-from app.models.enums import (  # noqa: F401
+from app.models.enums import (
     AnalysisStatus,
     FindingCategory,
     FindingSource,
@@ -32,24 +32,24 @@ from app.models.enums import (  # noqa: F401
 
 __all__ = [
     "Analysis",
+    "AnalysisStatus",
     "AuditLog",
     "Finding",
-    "GitHubInstallation",
-    "Patch",
-    "PullRequest",
-    "Repository",
-    "RepositorySettings",
-    "ReviewComment",
-    "User",
-    "ValidationRun",
-    "AnalysisStatus",
     "FindingCategory",
     "FindingSource",
     "FindingStatus",
+    "GitHubInstallation",
+    "Patch",
     "PatchStatus",
+    "PullRequest",
     "PullRequestStatus",
+    "Repository",
+    "RepositorySettings",
+    "ReviewComment",
     "ReviewerAgent",
     "RiskLevel",
     "Severity",
+    "User",
+    "ValidationRun",
     "ValidationStatus",
 ]

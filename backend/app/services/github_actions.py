@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import re
 from datetime import datetime, timezone
-from typing import Optional
 
 from sqlmodel import Session, select
 
@@ -131,7 +130,7 @@ async def publish_review(
     min_severity: Severity = Severity.MEDIUM,
     include_inline_comments: bool = True,
     dry_run: bool = False,
-    user_id: Optional[str] = None,
+    user_id: str | None = None,
 ) -> dict:
     pull_request = session.get(PullRequest, analysis.pull_request_id)
     repository = session.get(Repository, pull_request.repository_id)
@@ -225,11 +224,11 @@ async def create_fix_pull_request(
     session: Session,
     analysis: Analysis,
     *,
-    patch_ids: Optional[list[str]] = None,
-    branch_name: Optional[str] = None,
-    title: Optional[str] = None,
+    patch_ids: list[str] | None = None,
+    branch_name: str | None = None,
+    title: str | None = None,
     dry_run: bool = False,
-    user_id: Optional[str] = None,
+    user_id: str | None = None,
 ) -> dict:
     pull_request = session.get(PullRequest, analysis.pull_request_id)
     repository = session.get(Repository, pull_request.repository_id)
@@ -444,8 +443,8 @@ def _fix_pr_body(
 
 
 async def update_check_run(
-    session: Session, analysis: Analysis, *, status: str, conclusion: Optional[str] = None
-) -> Optional[dict]:
+    session: Session, analysis: Analysis, *, status: str, conclusion: str | None = None
+) -> dict | None:
     """Report analysis state back to GitHub as a check run."""
     pull_request = session.get(PullRequest, analysis.pull_request_id)
     repository = session.get(Repository, pull_request.repository_id)

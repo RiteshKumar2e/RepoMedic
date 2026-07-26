@@ -8,7 +8,6 @@ rejected before it ever reaches validation, let alone a branch.
 from __future__ import annotations
 
 import difflib
-from typing import Optional
 
 from app.analyzers.registry import analyzer_for_path
 from app.core.logging import get_logger
@@ -39,7 +38,7 @@ def changed_line_count(unified_diff: str) -> int:
     )
 
 
-def apply_proposal(source: str, proposal: PatchProposal) -> tuple[Optional[str], str]:
+def apply_proposal(source: str, proposal: PatchProposal) -> tuple[str | None, str]:
     """Apply a proposal to source text.
 
     Returns ``(updated_source, error)``. ``updated_source`` is ``None`` when the
@@ -106,9 +105,9 @@ def build_proposal(
     suggested_code: str,
     explanation: str,
     expected_impact: str = "",
-    side_effects: Optional[list[str]] = None,
+    side_effects: list[str] | None = None,
     generated_by: str = "fix_generator",
-) -> Optional[PatchProposal]:
+) -> PatchProposal | None:
     """Construct a proposal from a line range, computing the diff."""
     lines = source.splitlines()
     if not (1 <= start_line <= end_line <= len(lines)):

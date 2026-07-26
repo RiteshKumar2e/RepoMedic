@@ -23,7 +23,6 @@ from app.github.service import resolve_token
 from app.llm.base import UsageTracker
 from app.llm.registry import get_provider
 from app.models.entities import (
-    Finding,
     GitHubInstallation,
     Patch,
     PullRequest,

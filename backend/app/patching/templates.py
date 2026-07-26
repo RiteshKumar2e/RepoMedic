@@ -12,8 +12,8 @@ returns replacement text, or ``None`` if the shape does not match.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional
 
 from app.domain.types import PatchProposal, UnifiedFinding
 from app.models.enums import RiskLevel
@@ -28,13 +28,13 @@ class TemplateResult:
     risk_level: RiskLevel = RiskLevel.LOW
 
 
-Template = Callable[[str], Optional[TemplateResult]]
+Template = Callable[[str], TemplateResult | None]
 
 
 # --------------------------------------------------------------------------- #
 # Individual templates
 # --------------------------------------------------------------------------- #
-def _restore_tls_verification(block: str) -> Optional[TemplateResult]:
+def _restore_tls_verification(block: str) -> TemplateResult | None:
     if not re.search(r"verify\s*=\s*False", block):
         return None
     updated = re.sub(r",?\s*verify\s*=\s*False", "", block)
@@ -57,7 +57,7 @@ def _restore_tls_verification(block: str) -> Optional[TemplateResult]:
     )
 
 
-def _add_request_timeout(block: str) -> Optional[TemplateResult]:
+def _add_request_timeout(block: str) -> TemplateResult | None:
     if "timeout" in block:
         return None
     match = re.search(r"(requests|httpx)\.(get|post|put|delete|patch|request)\s*\(", block)
@@ -108,7 +108,7 @@ def _add_request_timeout(block: str) -> Optional[TemplateResult]:
     )
 
 
-def _safe_yaml_load(block: str) -> Optional[TemplateResult]:
+def _safe_yaml_load(block: str) -> TemplateResult | None:
     if "yaml.load" not in block or "safe_load" in block:
         return None
     updated = re.sub(r"yaml\.load\s*\(", "yaml.safe_load(", block)
@@ -124,7 +124,7 @@ def _safe_yaml_load(block: str) -> Optional[TemplateResult]:
     )
 
 
-def _literal_eval(block: str) -> Optional[TemplateResult]:
+def _literal_eval(block: str) -> TemplateResult | None:
     if not re.search(r"(?<![\w.])eval\s*\(", block):
         return None
     updated = re.sub(r"(?<![\w.])eval\s*\(", "ast.literal_eval(", block)
@@ -144,7 +144,7 @@ def _literal_eval(block: str) -> Optional[TemplateResult]:
     )
 
 
-def _bare_except(block: str) -> Optional[TemplateResult]:
+def _bare_except(block: str) -> TemplateResult | None:
     if not re.search(r"except\s*:", block):
         return None
     updated = re.sub(r"except\s*:", "except Exception as exc:", block)
@@ -174,7 +174,7 @@ def _bare_except(block: str) -> Optional[TemplateResult]:
     )
 
 
-def _jwt_verify(block: str) -> Optional[TemplateResult]:
+def _jwt_verify(block: str) -> TemplateResult | None:
     if "jwt.decode(" not in block:
         return None
     if "algorithms" in block and "verify" not in block:
@@ -204,7 +204,7 @@ def _jwt_verify(block: str) -> Optional[TemplateResult]:
     )
 
 
-def _permissive_cors(block: str) -> Optional[TemplateResult]:
+def _permissive_cors(block: str) -> TemplateResult | None:
     if '"*"' not in block and "'*'" not in block:
         return None
     if "allow_origins" not in block and "origins" not in block:
@@ -223,7 +223,7 @@ def _permissive_cors(block: str) -> Optional[TemplateResult]:
     )
 
 
-def _hardcoded_secret(block: str) -> Optional[TemplateResult]:
+def _hardcoded_secret(block: str) -> TemplateResult | None:
     match = re.search(
         r"""(?i)^(\s*)([A-Za-z_][\w]*)\s*[:=]\s*['"]([^'"]{8,})['"]""", block, re.M
     )
@@ -247,7 +247,7 @@ def _hardcoded_secret(block: str) -> Optional[TemplateResult]:
         ),
         expected_impact="The credential is supplied at deploy time; source contains no secret.",
         side_effects=[
-            f"ROTATE the exposed credential now — removing it from source does not remove it from git history.",
+            "ROTATE the exposed credential now — removing it from source does not remove it from git history.",
             f"Set `{env_name}` in every environment, and add it to `.env.example`.",
             "Requires `import os`.",
         ],
@@ -255,7 +255,7 @@ def _hardcoded_secret(block: str) -> Optional[TemplateResult]:
     )
 
 
-def _dangerous_inner_html(block: str) -> Optional[TemplateResult]:
+def _dangerous_inner_html(block: str) -> TemplateResult | None:
     if "innerHTML" not in block:
         return None
     updated = re.sub(r"\.innerHTML(\s*)=", r".textContent\1=", block)
@@ -274,7 +274,7 @@ def _dangerous_inner_html(block: str) -> Optional[TemplateResult]:
     )
 
 
-def _empty_catch(block: str) -> Optional[TemplateResult]:
+def _empty_catch(block: str) -> TemplateResult | None:
     # The catch is usually preceded by the try's closing brace on the same line
     # (`} catch (error) {}`), so that prefix has to be part of the match.
     pattern = re.compile(r"^([ \t]*)(\}\s*)?catch\s*\(([^)]*)\)\s*\{\s*\}", re.M)
@@ -333,7 +333,7 @@ TEMPLATES: dict[str, Template] = {
 SECRET_RULE_PREFIXES = ("secret/", "S105", "S106", "S107", "B105", "B106", "B107")
 
 
-def template_patch(finding: UnifiedFinding, source: str) -> Optional[PatchProposal]:
+def template_patch(finding: UnifiedFinding, source: str) -> PatchProposal | None:
     """Build a deterministic patch for ``finding``, or ``None`` if no template fits."""
     from app.patching.differ import build_proposal
 

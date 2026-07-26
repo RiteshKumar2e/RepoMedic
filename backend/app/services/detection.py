@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from app.core.logging import get_logger
 from app.domain.types import Language, SourceFile
@@ -100,9 +100,7 @@ def detect_frameworks(dependencies: dict[str, str], file_paths: set[str]) -> lis
     detected: list[str] = []
     lowered = {name.lower() for name in dependencies}
     for label, dependency_names, markers in FRAMEWORK_MARKERS:
-        if any(name.lower() in lowered for name in dependency_names):
-            detected.append(label)
-        elif any(marker in file_paths for marker in markers):
+        if any(name.lower() in lowered for name in dependency_names) or any(marker in file_paths for marker in markers):
             detected.append(label)
     return detected
 

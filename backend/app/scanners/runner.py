@@ -17,10 +17,10 @@ import os
 import shutil
 import subprocess
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional, Sequence
 
 from app.core.config import SandboxMode, settings
 from app.core.logging import get_logger
@@ -92,7 +92,7 @@ def run_tool(
     argv: Sequence[str],
     *,
     cwd: Path,
-    timeout: Optional[int] = None,
+    timeout: int | None = None,
     allow_network: bool = False,
     writable: bool = False,
     executes_repository_code: bool = False,

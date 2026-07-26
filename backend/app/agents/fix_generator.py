@@ -15,7 +15,6 @@ Strategy, in order:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from app.agents.prompts import FIX_GENERATOR, fix_user_message
 from app.core.logging import get_logger
@@ -37,7 +36,7 @@ NON_PATCHABLE_CATEGORIES = {FindingCategory.ARCHITECTURE, FindingCategory.BREAKI
 
 @dataclass(slots=True)
 class FixOutcome:
-    proposal: Optional[PatchProposal] = None
+    proposal: PatchProposal | None = None
     generated_by: str = ""
     reason: str = ""
 
@@ -154,7 +153,7 @@ def _resolve_range(
     original: object,
     source_file: SourceFile,
     finding: UnifiedFinding,
-) -> tuple[Optional[int], Optional[int]]:
+) -> tuple[int | None, int | None]:
     """Locate the replacement range, trusting the quoted text over the line numbers."""
     lines = source_file.lines
 
@@ -179,7 +178,7 @@ def _resolve_range(
     return start, end
 
 
-def _find_block(lines: list[str], block: str) -> Optional[tuple[int, int]]:
+def _find_block(lines: list[str], block: str) -> tuple[int, int] | None:
     """Find a unique multi-line block, comparing on stripped content."""
     needle = [line.strip() for line in block.splitlines() if line.strip()]
     if not needle:

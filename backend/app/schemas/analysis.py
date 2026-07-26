@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -21,7 +21,7 @@ from app.models.enums import (
 
 class AnalyzeRequest(BaseModel):
     force: bool = False
-    reviewers: Optional[list[str]] = None
+    reviewers: list[str] | None = None
     generate_patches: bool = True
 
 
@@ -31,8 +31,8 @@ class AnalysisRead(BaseModel):
     status: AnalysisStatus
     stage: str
     progress: int
-    model_provider: Optional[str] = None
-    model_name: Optional[str] = None
+    model_provider: str | None = None
+    model_name: str | None = None
     prompt_tokens: int = 0
     completion_tokens: int = 0
     token_usage: int = 0
@@ -42,12 +42,12 @@ class AnalysisRead(BaseModel):
     reviewers_run: list[str] = Field(default_factory=list)
     stage_timings: dict[str, float] = Field(default_factory=dict)
     context_manifest: dict[str, Any] = Field(default_factory=dict)
-    summary: Optional[str] = None
+    summary: str | None = None
     triggered_by: str = "manual"
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    duration_seconds: Optional[float] = None
-    error_message: Optional[str] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    duration_seconds: float | None = None
+    error_message: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -73,17 +73,17 @@ class AnalysisDetail(AnalysisRead):
 class ValidationRunRead(BaseModel):
     id: str
     patch_id: str
-    parser_passed: Optional[bool] = None
-    lint_passed: Optional[bool] = None
-    typecheck_passed: Optional[bool] = None
-    tests_passed: Optional[bool] = None
-    security_scan_passed: Optional[bool] = None
+    parser_passed: bool | None = None
+    lint_passed: bool | None = None
+    typecheck_passed: bool | None = None
+    tests_passed: bool | None = None
+    security_scan_passed: bool | None = None
     semantic_similarity: float = 0.0
     tests_before: dict[str, Any] = Field(default_factory=dict)
     tests_after: dict[str, Any] = Field(default_factory=dict)
     step_results: list[dict[str, Any]] = Field(default_factory=list)
     test_output: str = ""
-    skipped_reason: Optional[str] = None
+    skipped_reason: str | None = None
     execution_time: float = 0.0
     created_at: datetime
 
@@ -107,9 +107,9 @@ class PatchRead(BaseModel):
     validation_status: ValidationStatus
     auto_apply_eligible: bool
     generated_by: str
-    approved_at: Optional[datetime] = None
-    rejected_at: Optional[datetime] = None
-    rejection_reason: Optional[str] = None
+    approved_at: datetime | None = None
+    rejected_at: datetime | None = None
+    rejection_reason: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -117,7 +117,7 @@ class PatchRead(BaseModel):
 
 class PatchDetail(PatchRead):
     validation_runs: list[ValidationRunRead] = Field(default_factory=list)
-    finding: Optional["FindingRead"] = None
+    finding: FindingRead | None = None
 
 
 class FindingRead(BaseModel):
@@ -137,8 +137,8 @@ class FindingRead(BaseModel):
     code_snippet: str = ""
     source: FindingSource
     corroborating_sources: list[str] = Field(default_factory=list)
-    rule_id: Optional[str] = None
-    cwe: Optional[str] = None
+    rule_id: str | None = None
+    cwe: str | None = None
     fingerprint: str
     status: FindingStatus
     related_files: list[str] = Field(default_factory=list)
@@ -164,26 +164,26 @@ class PublishReviewRequest(BaseModel):
 
 class PublishReviewResponse(BaseModel):
     posted: bool
-    summary_comment_url: Optional[str] = None
+    summary_comment_url: str | None = None
     inline_comments: int = 0
-    dry_run_body: Optional[str] = None
+    dry_run_body: str | None = None
 
 
 class CreateFixPRRequest(BaseModel):
-    patch_ids: Optional[list[str]] = None
-    branch_name: Optional[str] = Field(default=None, max_length=200)
-    title: Optional[str] = Field(default=None, max_length=200)
+    patch_ids: list[str] | None = None
+    branch_name: str | None = Field(default=None, max_length=200)
+    title: str | None = Field(default=None, max_length=200)
     dry_run: bool = False
 
 
 class CreateFixPRResponse(BaseModel):
     created: bool
     branch: str
-    pull_request_url: Optional[str] = None
-    pull_request_number: Optional[int] = None
+    pull_request_url: str | None = None
+    pull_request_number: int | None = None
     applied_patches: list[str] = Field(default_factory=list)
     skipped_patches: list[dict[str, str]] = Field(default_factory=list)
-    dry_run_diff: Optional[str] = None
+    dry_run_diff: str | None = None
 
 
 PatchDetail.model_rebuild()

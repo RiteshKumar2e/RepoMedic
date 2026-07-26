@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Query, Request
 
 from app.api.deps import CurrentUser, RateLimited, SessionDep, client_ip, load_repository
@@ -17,7 +15,8 @@ from app.schemas.repository import (
     RepositorySettingsRead,
     RepositorySettingsUpdate,
 )
-from app.services import audit, repositories as repo_service
+from app.services import audit
+from app.services import repositories as repo_service
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/repositories", tags=["repositories"])
@@ -68,7 +67,7 @@ def list_pull_requests(
     repository_id: str,
     user: CurrentUser,
     session: SessionDep,
-    status: Optional[PullRequestStatus] = Query(default=None),
+    status: PullRequestStatus | None = Query(default=None),
 ) -> list[PullRequestRead]:
     repo = load_repository(repository_id, session, user)
     rows = repo_service.list_pull_requests(session, repo, status)

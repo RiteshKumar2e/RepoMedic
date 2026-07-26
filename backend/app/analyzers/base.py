@@ -8,7 +8,7 @@ registering it — nothing else in the pipeline changes.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from app.domain.types import (
     CallRef,
@@ -72,12 +72,12 @@ class LanguageAnalyzer(Protocol):
 
     def detect_issues(self, context: AnalyzerContext) -> list[UnifiedFinding]: ...
 
-    def apply_patch(self, source_code: str, patch: PatchProposal) -> Optional[str]: ...
+    def apply_patch(self, source_code: str, patch: PatchProposal) -> str | None: ...
 
     def validate_syntax(self, source_code: str) -> tuple[bool, str]: ...
 
 
-def enclosing_symbol(symbols: list[Symbol], line: int) -> Optional[Symbol]:
+def enclosing_symbol(symbols: list[Symbol], line: int) -> Symbol | None:
     """Innermost symbol containing ``line`` — used to attribute findings."""
     candidates = [s for s in symbols if s.start_line <= line <= s.end_line]
     if not candidates:

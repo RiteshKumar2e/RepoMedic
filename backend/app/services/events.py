@@ -10,7 +10,8 @@ import asyncio
 import json
 import time
 from collections import defaultdict, deque
-from typing import Any, AsyncIterator, Optional
+from collections.abc import AsyncIterator
+from typing import Any
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -24,7 +25,7 @@ _REPLAY_LIMIT = 200
 # staring at an empty stream.
 _history: dict[str, deque] = defaultdict(lambda: deque(maxlen=_REPLAY_LIMIT))
 _subscribers: dict[str, set[asyncio.Queue]] = defaultdict(set)
-_loop: Optional[asyncio.AbstractEventLoop] = None
+_loop: asyncio.AbstractEventLoop | None = None
 
 
 def set_event_loop(loop: asyncio.AbstractEventLoop) -> None:
@@ -95,7 +96,7 @@ async def subscribe(analysis_id: str) -> AsyncIterator[dict[str, Any]]:
     queue: asyncio.Queue = asyncio.Queue(maxsize=512)
     _subscribers[analysis_id].add(queue)
 
-    redis_task: Optional[asyncio.Task] = None
+    redis_task: asyncio.Task | None = None
     client = _redis()
     if client is not None:
         redis_task = asyncio.create_task(_pump_redis(analysis_id, queue, client))
@@ -106,7 +107,7 @@ async def subscribe(analysis_id: str) -> AsyncIterator[dict[str, Any]]:
         while True:
             try:
                 message = await asyncio.wait_for(queue.get(), timeout=15.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 yield {"type": "heartbeat", "analysis_id": analysis_id, "timestamp": time.time()}
                 continue
             yield message

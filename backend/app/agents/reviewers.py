@@ -8,7 +8,6 @@ sequencing, budgets and retries. That is what keeps cost and latency predictable
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from app.agents.prompts import REVIEWER_PROMPTS, review_user_message
 from app.core.logging import get_logger
@@ -29,7 +28,7 @@ class ReviewOutcome:
     findings: list[UnifiedFinding] = field(default_factory=list)
     ran: bool = True
     skipped_reason: str = ""
-    response: Optional[LLMResponse] = None
+    response: LLMResponse | None = None
     error: str = ""
 
 
@@ -121,7 +120,7 @@ class ReviewAgent:
         context: AnalysisContext,
         valid_paths: set[str],
         response: LLMResponse,
-    ) -> Optional[UnifiedFinding]:
+    ) -> UnifiedFinding | None:
         title = str(raw.get("title", "")).strip()
         file_path = str(raw.get("file_path", "")).strip().lstrip("./")
         if not title or not file_path:

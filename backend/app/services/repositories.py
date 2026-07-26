@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from sqlmodel import Session, select
 
 from app.models.entities import (
@@ -37,7 +35,7 @@ def list_repositories(session: Session, user: User) -> list[Repository]:
 
 
 def list_pull_requests(
-    session: Session, repository: Repository, status: Optional[PullRequestStatus] = None
+    session: Session, repository: Repository, status: PullRequestStatus | None = None
 ) -> list[PullRequest]:
     statement = select(PullRequest).where(PullRequest.repository_id == repository.id)
     if status:

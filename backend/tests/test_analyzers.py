@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import pytest
-
 from app.analyzers.javascript_analyzer import JavaScriptAnalyzer
 from app.analyzers.python_analyzer import PythonAnalyzer
 

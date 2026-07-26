@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 # (rule id, human label, compiled pattern, capture group holding the secret)
 _PATTERNS: list[tuple[str, str, re.Pattern[str], int]] = [

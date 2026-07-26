@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional
 
 from app.core.logging import get_logger
-from app.scanners.base import ScanRequest, ScanResult, Scanner
+from app.scanners.base import Scanner, ScanRequest, ScanResult
 from app.scanners.custom_rules import CustomRuleScanner
 from app.scanners.js_scanners import ESLintScanner, NpmAuditScanner, TypeScriptScanner
 from app.scanners.python_scanners import BanditScanner, MypyScanner, RadonScanner, RuffScanner
@@ -50,7 +49,7 @@ def available_scanners() -> dict[str, bool]:
     return {name: scanner.available() for name, scanner in SCANNERS.items()}
 
 
-def _select(enabled: Optional[list[str]], families: set[str]) -> list[Scanner]:
+def _select(enabled: list[str] | None, families: set[str]) -> list[Scanner]:
     selected: list[Scanner] = []
     for name, scanner in SCANNERS.items():
         if enabled is not None and name not in enabled and name not in ALWAYS_ON:
@@ -64,9 +63,9 @@ def _select(enabled: Optional[list[str]], families: set[str]) -> list[Scanner]:
 def run_scanners(
     request: ScanRequest,
     *,
-    enabled: Optional[list[str]] = None,
-    families: Optional[set[str]] = None,
-    custom_rules: Optional[list[dict]] = None,
+    enabled: list[str] | None = None,
+    families: set[str] | None = None,
+    custom_rules: list[dict] | None = None,
     max_workers: int = 4,
     on_result=None,
 ) -> list[ScanResult]:

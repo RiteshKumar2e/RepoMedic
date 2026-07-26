@@ -7,7 +7,6 @@ generic grammar — so it is preferred over tree-sitter for this language.
 from __future__ import annotations
 
 import ast
-from typing import Optional
 
 from app.analyzers.base import AnalyzerContext, ParseResult
 from app.analyzers.python_rules import PythonRuleVisitor
@@ -67,9 +66,9 @@ class PythonAnalyzer:
         return symbols
 
     def _collect(
-        self, node: ast.AST, path: str, parent: Optional[str], symbols: list[Symbol]
+        self, node: ast.AST, path: str, parent: str | None, symbols: list[Symbol]
     ) -> None:
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             decorators = [_decorator_name(d) for d in node.decorator_list]
             kind = SymbolKind.METHOD if parent else SymbolKind.FUNCTION
             if any(_is_route_decorator(d) for d in decorators):
@@ -192,7 +191,7 @@ class PythonAnalyzer:
         return visitor.findings
 
     # ---- patching --------------------------------------------------------
-    def apply_patch(self, source_code: str, patch: PatchProposal) -> Optional[str]:
+    def apply_patch(self, source_code: str, patch: PatchProposal) -> str | None:
         """Replace the original snippet with the suggestion, preserving indentation.
 
         Returns ``None`` when the original text cannot be located unambiguously —
@@ -260,8 +259,7 @@ def _cyclomatic(node: ast.AST) -> int:
     """Approximate cyclomatic complexity: one plus every branching construct."""
     complexity = 1
     for child in ast.walk(node):
-        if isinstance(child, (ast.If, ast.For, ast.AsyncFor, ast.While, ast.ExceptHandler,
-                              ast.With, ast.AsyncWith, ast.Assert, ast.IfExp)):
+        if isinstance(child, ast.If | ast.For | ast.AsyncFor | ast.While | ast.ExceptHandler | ast.With | ast.AsyncWith | ast.Assert | ast.IfExp):
             complexity += 1
         elif isinstance(child, ast.BoolOp):
             complexity += len(child.values) - 1
@@ -271,7 +269,4 @@ def _cyclomatic(node: ast.AST) -> int:
 
 
 def _is_awaited(call: ast.Call, module: ast.AST) -> bool:
-    for node in ast.walk(module):
-        if isinstance(node, ast.Await) and node.value is call:
-            return True
-    return False
+    return any(isinstance(node, ast.Await) and node.value is call for node in ast.walk(module))

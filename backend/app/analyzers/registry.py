@@ -6,8 +6,6 @@ import it here, and add it to ``_ANALYZERS``. See docs/adding-a-language.md.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from app.analyzers.base import LanguageAnalyzer
 from app.analyzers.javascript_analyzer import (
     JavaScriptAnalyzer,
@@ -25,11 +23,11 @@ _ANALYZERS: dict[Language, LanguageAnalyzer] = {
 }
 
 
-def analyzer_for(language: Language) -> Optional[LanguageAnalyzer]:
+def analyzer_for(language: Language) -> LanguageAnalyzer | None:
     return _ANALYZERS.get(language)
 
 
-def analyzer_for_path(path: str) -> Optional[LanguageAnalyzer]:
+def analyzer_for_path(path: str) -> LanguageAnalyzer | None:
     return analyzer_for(Language.from_path(path))
 
 

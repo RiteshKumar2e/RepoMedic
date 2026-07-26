@@ -15,7 +15,7 @@ from app.api.deps import (
 )
 from app.core.errors import ConflictError, ValidationError
 from app.core.logging import get_logger
-from app.domain.types import Language, PatchProposal, SourceFile
+from app.domain.types import PatchProposal
 from app.github.client import GitHubClient
 from app.github.service import resolve_token
 from app.models.entities import (
@@ -30,7 +30,6 @@ from app.models.entities import (
 from app.models.enums import FindingStatus, PatchStatus, ValidationStatus
 from app.schemas.analysis import FindingRead, PatchDetail, RejectPatchRequest, ValidationRunRead
 from app.services import audit
-from app.services.analysis_pipeline import context_findings
 from app.services.scoring import ValidationSignals, fix_confidence
 
 logger = get_logger(__name__)

@@ -21,18 +21,16 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from app.analyzers.registry import analyzer_for_path
-from app.core.config import settings
 from app.core.logging import get_logger
 from app.domain.types import Language, PatchProposal, UnifiedFinding
 from app.models.enums import RiskLevel, Severity, ValidationStatus
 from app.patching.differ import apply_proposal, changed_line_count
 from app.retrieval.embeddings import jaccard_similarity
 from app.scanners.base import ScanRequest
-from app.scanners.python_scanners import BanditScanner, MypyScanner, RuffScanner
 from app.scanners.js_scanners import ESLintScanner, TypeScriptScanner
+from app.scanners.python_scanners import BanditScanner, MypyScanner, RuffScanner
 from app.scanners.runner import run_tool, tool_available
 from app.services.scoring import (
     ValidationSignals,
@@ -81,7 +79,7 @@ class ValidationOutcome:
 
 
 class ValidationPipeline:
-    def __init__(self, workspace_root: Path, *, all_files: Optional[list[str]] = None) -> None:
+    def __init__(self, workspace_root: Path, *, all_files: list[str] | None = None) -> None:
         self.workspace_root = workspace_root
         self.all_files = all_files or []
 

@@ -16,9 +16,9 @@ import os
 import shutil
 import subprocess
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, Optional
 
 from app.core.config import settings
 from app.core.errors import SandboxError, ValidationError
@@ -80,7 +80,7 @@ class Workspace:
         logger.info("workspace.cleaned", analysis_id=self.analysis_id)
 
 
-def _run_git(args: list[str], cwd: Optional[Path] = None, timeout: int = 300) -> str:
+def _run_git(args: list[str], cwd: Path | None = None, timeout: int = 300) -> str:
     """Run a git command with a fixed argv (never a shell string)."""
     try:
         completed = subprocess.run(
@@ -207,8 +207,8 @@ def is_excluded(path: str, patterns: list[str]) -> bool:
 def iter_source_files(
     workspace: Workspace,
     *,
-    excluded_paths: Optional[list[str]] = None,
-    languages: Optional[set[Language]] = None,
+    excluded_paths: list[str] | None = None,
+    languages: set[Language] | None = None,
     max_files: int = 5000,
 ) -> Iterator[SourceFile]:
     """Walk the workspace yielding readable, non-binary, non-excluded text files."""

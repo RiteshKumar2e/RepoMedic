@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -11,12 +11,12 @@ class GraphNode(BaseModel):
     id: str
     label: str
     type: str  # file | module | class | function | route | model | test | dependency
-    file_path: Optional[str] = None
-    language: Optional[str] = None
-    start_line: Optional[int] = None
-    end_line: Optional[int] = None
+    file_path: str | None = None
+    language: str | None = None
+    start_line: int | None = None
+    end_line: int | None = None
     finding_count: int = 0
-    max_severity: Optional[str] = None
+    max_severity: str | None = None
     changed: bool = False
     metrics: dict[str, Any] = Field(default_factory=dict)
 
@@ -32,7 +32,7 @@ class GraphEdge(BaseModel):
 class GraphResponse(BaseModel):
     nodes: list[GraphNode]
     edges: list[GraphEdge]
-    generated_at: Optional[str] = None
+    generated_at: str | None = None
     truncated: bool = False
     stats: dict[str, int] = Field(default_factory=dict)
 

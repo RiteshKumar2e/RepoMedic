@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import AsyncIterator, Optional
+from collections.abc import AsyncIterator
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import StreamingResponse
@@ -14,7 +14,6 @@ from app.api.deps import (
     CurrentUser,
     RateLimited,
     SessionDep,
-    client_ip,
     load_analysis,
 )
 from app.core.errors import ValidationError
@@ -62,11 +61,11 @@ def list_findings(
     analysis_id: str,
     user: CurrentUser,
     session: SessionDep,
-    severity: Optional[list[Severity]] = Query(default=None),
-    category: Optional[list[FindingCategory]] = Query(default=None),
-    source: Optional[list[FindingSource]] = Query(default=None),
-    finding_status: Optional[list[FindingStatus]] = Query(default=None, alias="status"),
-    file_path: Optional[str] = Query(default=None),
+    severity: list[Severity] | None = Query(default=None),
+    category: list[FindingCategory] | None = Query(default=None),
+    source: list[FindingSource] | None = Query(default=None),
+    finding_status: list[FindingStatus] | None = Query(default=None, alias="status"),
+    file_path: str | None = Query(default=None),
     min_confidence: float = Query(default=0.0, ge=0.0, le=1.0),
 ) -> list[FindingRead]:
     analysis = load_analysis(analysis_id, session, user)

@@ -10,8 +10,6 @@ Resolution order for a requested provider:
 
 from __future__ import annotations
 
-from typing import Optional
-
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.llm.base import LLMProvider
@@ -32,7 +30,7 @@ DEFAULT_MODELS = {
 }
 
 
-def _build(provider: str, model: Optional[str]) -> Optional[LLMProvider]:
+def _build(provider: str, model: str | None) -> LLMProvider | None:
     resolved_model = model or DEFAULT_MODELS.get(provider, settings.default_llm_model)
     if provider == "anthropic":
         return AnthropicProvider(model=resolved_model, api_key=settings.anthropic_api_key)
@@ -63,7 +61,7 @@ def _build(provider: str, model: Optional[str]) -> Optional[LLMProvider]:
 
 
 def get_provider(
-    preferred: Optional[str] = None, model: Optional[str] = None
+    preferred: str | None = None, model: str | None = None
 ) -> LLMProvider:
     candidates = [
         preferred,
