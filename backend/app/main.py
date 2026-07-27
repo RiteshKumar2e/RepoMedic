@@ -44,12 +44,15 @@ async def lifespan(app: FastAPI):
     init_db()
     sweep_stale_workspaces()
 
-    if settings.demo_mode:
+    # Fixture data is a development and test convenience. It must never appear
+    # in a production database — there is no demo sign-in that could reach it,
+    # so seeding there would only leave orphaned rows nobody can access.
+    if settings.demo_mode and not settings.is_production:
         from app.services.demo import seed_demo_workspace
 
         try:
             await seed_demo_workspace()
-        except Exception as exc:  # demo data must never block startup
+        except Exception as exc:  # fixture data must never block startup
             logger.warning("demo.seed_failed", error=str(exc))
 
     logger.info(

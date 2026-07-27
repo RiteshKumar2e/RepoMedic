@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, Github, Loader2, Sparkles } from "lucide-react";
+import { AlertCircle, Github, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
@@ -14,7 +14,7 @@ import { APIError } from "@/lib/api";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, demoLogin, isSigningIn, isLoggingIn } = useAuth();
+  const { login, isSigningIn } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,17 +53,7 @@ function LoginForm() {
     }
   };
 
-  const handleDemo = async () => {
-    setError(null);
-    try {
-      await demoLogin();
-      router.replace("/dashboard");
-    } catch {
-      setError("Demo mode is disabled on this deployment.");
-    }
-  };
-
-  const busy = isSigningIn || isLoggingIn || gitHubState === "redirecting";
+  const busy = isSigningIn || gitHubState === "redirecting";
 
   return (
     <AuthShell
@@ -97,8 +87,8 @@ function LoginForm() {
         {gitHubState === "unavailable" && (
           <p className="flex gap-1.5 text-[12px] text-ink-muted">
             <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-medium" />
-            GitHub sign-in is not configured on this deployment. Use an email account or the demo
-            workspace below.
+            GitHub sign-in is not configured on this deployment. Sign in with an email account
+            below.
           </p>
         )}
 
@@ -160,23 +150,6 @@ function LoginForm() {
           </Button>
         </form>
 
-        <div className="rounded-md border border-line bg-surface px-3 py-3">
-          <p className="text-[12px] text-ink-muted">
-            Want to look around first? The demo workspace is seeded from a local fixture repository
-            — no GitHub access, no writes.
-          </p>
-          <Button
-            type="button"
-            onClick={handleDemo}
-            disabled={busy}
-            variant="ghost"
-            size="sm"
-            className="mt-2 gap-1.5 px-0 hover:bg-transparent hover:text-accent"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            {isLoggingIn ? "Preparing demo…" : "Explore the demo workspace"}
-          </Button>
-        </div>
       </div>
     </AuthShell>
   );

@@ -145,9 +145,8 @@ def test_login_does_not_disclose_whether_an_account_exists(client):
     assert unknown.json()["error"]["message"] == known.json()["error"]["message"]
 
 
-def test_demo_user_cannot_be_signed_into_with_a_password(client):
-    """The seeded demo account has no password hash, so it must never match."""
-    client.post("/api/v1/auth/demo")
+def test_fixture_user_cannot_be_signed_into_with_a_password(client):
+    """The seeded fixture account has no password hash, so it must never match."""
     client.post("/api/v1/auth/logout")
 
     response = client.post(
@@ -155,6 +154,11 @@ def test_demo_user_cannot_be_signed_into_with_a_password(client):
     )
 
     assert response.status_code == 401
+
+
+def test_demo_login_endpoint_no_longer_exists(client):
+    """Nobody may enter the workspace without registering or using GitHub."""
+    assert client.post("/api/v1/auth/demo").status_code == 404
 
 
 # --------------------------------------------------------------------------- #

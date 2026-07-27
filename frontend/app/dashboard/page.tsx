@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FolderGit2, GitPullRequest, ShieldAlert, CheckCircle2, Clock, Sparkles, ArrowRight, RefreshCw } from "lucide-react";
+import { FolderGit2, GitPullRequest, ShieldAlert, CheckCircle2, Clock, ArrowRight, RefreshCw } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+
 import { Button } from "@/components/ui/Button";
 import { useRepositories } from "@/hooks/useRepositories";
 import { useAnalytics } from "@/hooks/useAnalytics";
@@ -17,7 +17,7 @@ import { ConnectRepositories } from "@/components/repositories/ConnectRepositori
 
 function DashboardPage() {
   // RequireAuth guarantees a session before this renders — no silent sign-in.
-  const { user, isDemo } = useAuth();
+  const { user } = useAuth();
   const { data: repositories, isLoading: reposLoading, refetch: refetchRepos } = useRepositories();
   const { data: analytics } = useAnalytics();
 
@@ -35,11 +35,6 @@ function DashboardPage() {
                 <h1 className="text-xl font-semibold text-ink">
                   Welcome back, {user?.name || user?.login || "Developer"}
                 </h1>
-                {isDemo && (
-                  <Badge variant="medium" className="gap-1">
-                    <Sparkles className="w-3 h-3" /> Seeded Demo Mode
-                  </Badge>
-                )}
               </div>
               <p className="text-xs text-ink-muted mt-1">
                 Repository-aware AI analysis and 6-step fix validation active.

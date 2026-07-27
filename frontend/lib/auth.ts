@@ -50,10 +50,6 @@ export async function loginWithPassword(payload: LoginPayload): Promise<Authenti
   return persistSession(await api.post<AuthenticatedResponse>("/auth/login", payload));
 }
 
-export async function loginAsDemoUser(): Promise<AuthenticatedResponse> {
-  return persistSession(await api.post<AuthenticatedResponse>("/auth/demo"));
-}
-
 export async function startGitHubOAuth(redirectPath = "/dashboard") {
   return api.post<{ authorize_url: string; state: string; configured: boolean }>("/auth/github", {
     redirect_path: redirectPath,

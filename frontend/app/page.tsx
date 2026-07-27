@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+
 import { ArrowRight, Check, Stethoscope } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
@@ -55,14 +55,7 @@ const GUARANTEES = [
 ];
 
 export default function LandingPage() {
-  const { demoLogin, isLoggingIn } = useAuth();
-  const router = useRouter();
   const [tab, setTab] = useState<"finding" | "fix" | "validation">("finding");
-
-  const handleDemoClick = async () => {
-    await demoLogin();
-    router.push("/dashboard");
-  };
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
@@ -76,8 +69,6 @@ export default function LandingPage() {
             <span className="text-[15px] font-semibold tracking-tight">RepoMedic</span>
           </div>
 
-          {/* Two actions, not three. The demo lives in the hero where it is
-              the natural next step, not competing in the nav. */}
           <div className="flex items-center gap-2">
             <Link href="/login">
               <Button variant="ghost" size="sm">
@@ -106,20 +97,21 @@ export default function LandingPage() {
           </p>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Button variant="default" size="lg" onClick={handleDemoClick} disabled={isLoggingIn}>
-              {isLoggingIn ? "Starting demo…" : "See it review a pull request"}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
             <Link href="/register">
+              <Button variant="default" size="lg">
+                Get started
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/login">
               <Button variant="secondary" size="lg">
-                Create an account
+                Sign in
               </Button>
             </Link>
           </div>
 
           <p className="mt-4 text-[13px] text-ink-subtle">
-            The demo needs no account. It runs the real pipeline over a seeded, deliberately
-            vulnerable repository.
+            Connect a GitHub repository and RepoMedic reviews its next pull request.
           </p>
         </section>
 
@@ -292,22 +284,18 @@ export default function LandingPage() {
           <div className="mx-auto flex max-w-5xl flex-col items-start gap-6 px-6 py-16 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-[20px] font-semibold tracking-tight text-ink">
-                See it review a real pull request.
+                Put it on your next pull request.
               </h2>
               <p className="mt-1.5 text-[14px] text-ink-muted">
-                Findings, patches, validation results and the dependency graph — no account needed.
+                Connect a repository and get findings, validated patches and a dependency graph.
               </p>
             </div>
-            <Button
-              variant="default"
-              size="lg"
-              onClick={handleDemoClick}
-              disabled={isLoggingIn}
-              className="shrink-0"
-            >
-              {isLoggingIn ? "Starting demo…" : "Open the demo workspace"}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+            <Link href="/register" className="shrink-0">
+              <Button variant="default" size="lg">
+                Create an account
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </section>
       </main>

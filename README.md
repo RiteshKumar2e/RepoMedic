@@ -10,7 +10,7 @@ reliability defects — and **proves every proposed fix works before you are ask
 **[Live app](https://repomedic-ten.vercel.app)** ·
 **[API](https://repomedic.onrender.com/api/v1/health)** ·
 **[API docs](https://repomedic.onrender.com/docs)** ·
-**[Deployment guide](DEPLOYMENT.md)**
+**[Deployment](#deployment)**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-green.svg)](https://python.org)
@@ -165,9 +165,12 @@ npm run dev
 
 App on `http://localhost:3000`.
 
-### 3. Seed the demo workspace
+### 3. Seed the fixture workspace *(local development only)*
 
-`DEMO_MODE=true` (the default) seeds on first boot. To rebuild it by hand:
+`DEMO_MODE=true` (the default) seeds on first boot **outside production** — seeding is
+skipped entirely when `APP_ENV=production`, and there is no sign-in path to the fixture
+account, so it exists purely to give local development and the test suite real data to work
+with. To rebuild it by hand:
 
 ```bash
 cd backend
@@ -194,13 +197,12 @@ docker compose up --build
 
 ### Step 1 — Sign in
 
-Open `http://localhost:3000`. There are three ways in:
+Open `http://localhost:3000`. There are two ways in — every visitor needs an account:
 
-| Option                                      | Use it when                                                                                                                         |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Explore the demo workspace**        | You want to see the product immediately. No account, no GitHub. Seeded from a local fixture repository; GitHub writes are disabled. |
-| **Create an account** (`/register`) | Email and password. Requires 10+ characters with a letter and a number.                                                             |
-| **Continue with GitHub**              | You want to review your own repositories. Requires`GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`.                                  |
+| Option                                      | Use it when                                                                                     |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Create an account** (`/register`) | Email and password. Requires 10+ characters with a letter and a number.                         |
+| **Continue with GitHub**              | You want to review your own repositories. Requires `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`. |
 
 ### Step 2 — Connect repositories
 
@@ -209,8 +211,7 @@ Go to **Settings → GitHub Connection**, or the **Repositories** page, and choo
 - **Connect GitHub** — starts the OAuth flow if your account is not linked yet.
 - **Sync repositories** — imports everything the installation can see.
 
-The demo account holds no GitHub credential and will tell you so rather than failing
-silently.
+If your account is not linked to GitHub yet, the button starts the OAuth flow first.
 
 ### Step 3 — Open a pull request
 
@@ -280,13 +281,13 @@ most:
 | `DATABASE_AUTH_TOKEN`                         | *(empty)*          | Turso auth token (`turso db tokens create <db>`).                                                                   |
 | `JWT_SECRET`                                  | *(derived in dev)* | Session signing key.**Required outside development.**                                                           |
 | `ENCRYPTION_KEY`                              | *(derived in dev)* | **Must be a Fernet key**, not `openssl rand -hex 32`. Encrypts GitHub tokens at rest.                         |
-| `DEMO_MODE`                                   | `true`             | Seeds the demo workspace on boot.                                                                                     |
+|                                    |              | Seeds the fixture workspace on boot. Ignored when .                                               |
 | `DEFAULT_LLM_PROVIDER`                        | `heuristic`        | `gemini`, `groq`, `local` or `heuristic` (offline, no key).                                                   |
 | `GEMINI_API_KEY` / `GROQ_API_KEY`           | *(empty)*          | Only needed for model-backed reasoning.                                                                               |
 | `LOCAL_LLM_BASE_URL`                          | *(empty)*          | Any OpenAI-shaped server — Ollama, vLLM, LM Studio.                                                                  |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | *(empty)*          | Required for GitHub sign-in and repository import.                                                                    |
 | `GITHUB_WEBHOOK_SECRET`                       | *(empty)*          | Validates webhook signatures.                                                                                         |
-| `COOKIE_SAMESITE`                             | `lax`              | Use `none` when the app and API are on different sites — see [DEPLOYMENT.md](DEPLOYMENT.md).                          |
+| `COOKIE_SAMESITE`                             | `lax`              | Use `none` when the app and API are on different sites — see [Deployment](#deployment).                          |
 | `SANDBOX_MODE`                                | `subprocess`       | `docker`, `subprocess` or `disabled`. Use `docker` in production.                                             |
 | `MAX_ANALYSIS_COST_USD`                       | —                   | Hard budget cap per analysis.                                                                                         |
 | `REDIS_URL`                                   | *(empty)*          | Falls back to an in-process queue when absent.                                                                        |
@@ -328,7 +329,7 @@ graph TB
     subgraph Backend["Backend (FastAPI)"]
         API[REST API v1]
         SSE[SSE Events]
-        AUTH[Auth: password / GitHub OAuth / demo]
+        AUTH[Auth: password / GitHub OAuth]
         WH[Webhooks]
     end
 
@@ -424,7 +425,7 @@ RepoMedic/
 │   │   ├── db/                  # engine, session, additive columns
 │   │   ├── models/              # SQLModel entities (11 tables)
 │   │   ├── schemas/             # Pydantic request/response models
-│   │   ├── services/            # analysis pipeline, auth, analytics, demo
+│   │   ├── services/            # analysis pipeline, auth, analytics, fixtures
 │   │   ├── analyzers/           # Python AST + JS/TS tree-sitter rules
 │   │   ├── scanners/            # external tool integrations
 │   │   ├── agents/              # 5 reviewers + fix generator
@@ -436,8 +437,8 @@ RepoMedic/
 │   │   ├── security/            # prompt-injection firewall, redaction
 │   │   ├── workers/             # background tasks
 │   │   └── main.py
-│   ├── scripts/seed_demo.py     # seed / rebuild / reset the demo
-│   ├── fixtures/                # deliberately vulnerable demo repository
+│   ├── scripts/seed_demo.py     # seed / rebuild / reset local fixtures
+│   ├── fixtures/                # deliberately vulnerable fixture repository
 │   └── tests/                   # pytest suite
 │
 ├── docker-compose.yml
@@ -459,7 +460,6 @@ Full interactive documentation at `http://localhost:8000/docs`.
 | `POST` | `/api/v1/auth/login`           | Sign in with email + password                                                  |
 | `POST` | `/api/v1/auth/github`          | Start the GitHub OAuth flow                                                    |
 | `GET`  | `/api/v1/auth/github/callback` | OAuth callback                                                                 |
-| `POST` | `/api/v1/auth/demo`            | Sign in to the seeded demo workspace                                           |
 | `GET`  | `/api/v1/auth/session`         | Current session — returns`200` with `authenticated: false` when anonymous |
 | `POST` | `/api/v1/auth/logout`          | Clear the session cookie                                                       |
 
@@ -544,12 +544,6 @@ This project is deployed at:
 | API base | `https://repomedic.onrender.com/api/v1` |
 | Database | Turso (libSQL over HTTP) |
 
-**📘 See [DEPLOYMENT.md](DEPLOYMENT.md)** for the full step-by-step guide — Vercel (frontend),
-Render (backend) and Turso (database), with an environment-variable reference, a
-troubleshooting table and a production checklist.
-
-The short version:
-
 ```bash
 # Frontend → Vercel  (root directory: frontend)
 cd frontend && npx vercel --prod
@@ -558,13 +552,44 @@ cd frontend && npx vercel --prod
 cd backend && docker build -t repomedic-api .
 ```
 
-For production set `APP_ENV=production`, a real `JWT_SECRET`, a genuine Fernet
-`ENCRYPTION_KEY`, and `COOKIE_SECURE=true`.
+**Vercel** needs one environment variable — then redeploy, because `NEXT_PUBLIC_*` values are
+inlined at build time:
 
-> **If the app and API are on different domains** — the usual Vercel + Render split — you
-> must also set `COOKIE_SAMESITE=none`. A `SameSite=Lax` cookie is never sent cross-site, and
-> the SSE progress stream authenticates by cookie because `EventSource` cannot send a bearer
-> token. Without it, sign-in works but live analysis progress silently stalls.
+```env
+NEXT_PUBLIC_API_URL=https://repomedic.onrender.com/api/v1
+```
+
+**Render** needs these (Docker service, root directory `backend`, health check
+`/api/v1/health`):
+
+```env
+APP_ENV=production
+DATABASE_URL=libsql://<your-db>.turso.io
+DATABASE_AUTH_TOKEN=<turso token>
+JWT_SECRET=<openssl rand -hex 32>
+ENCRYPTION_KEY=<Fernet key — see Configuration>
+
+API_URL=https://repomedic.onrender.com
+FRONTEND_URL=https://repomedic-ten.vercel.app
+APP_URL=https://repomedic-ten.vercel.app
+
+COOKIE_SECURE=true
+COOKIE_SAMESITE=none
+COOKIE_DOMAIN=
+DEMO_MODE=false
+```
+
+`FRONTEND_URL` and `APP_URL` are the entire CORS allowlist and must match the deployed origin
+exactly — scheme included, no trailing slash. If the GitHub OAuth app is used, its callback
+URL is `https://repomedic.onrender.com/api/v1/auth/github/callback` — the **backend**, not the
+frontend.
+
+> **`COOKIE_SAMESITE=none` is required for the Vercel + Render split.** Those are different
+> sites, and a `SameSite=Lax` cookie is never sent cross-site. Normal API calls survive on the
+> bearer token, but `EventSource` cannot send headers — so the SSE progress stream
+> authenticates by cookie alone. Without this, sign-in works, the dashboard loads, and live
+> analysis progress silently stalls. Leave `COOKIE_DOMAIN` empty: `.vercel.app` and
+> `.onrender.com` are on the Public Suffix List, so browsers reject cookies scoped to them.
 
 ---
 

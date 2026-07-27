@@ -176,35 +176,6 @@ def login(
     )
 
 
-@router.post(
-    "/demo",
-    response_model=SessionResponse,
-    dependencies=[RateLimited],
-    summary="Sign in to the seeded demo workspace",
-)
-def demo_login(request: Request, response: Response, session: SessionDep) -> SessionResponse:
-    """Demo mode exists so the product is explorable without GitHub credentials."""
-    if not settings.demo_mode:
-        raise AuthenticationError("Demo mode is disabled on this deployment")
-
-    user = auth_service.get_or_create_demo_user(session)
-    token = _start_session(response, user)
-    audit.record(
-        session,
-        action="auth.login",
-        entity_type="user",
-        entity_id=user.id,
-        user_id=user.id,
-        metadata={"method": "demo"},
-        ip_address=client_ip(request),
-    )
-    return SessionResponse(
-        user=UserRead.model_validate(user),
-        github_connected=False,
-        token=token,
-    )
-
-
 @router.get("/session", response_model=SessionResponse, summary="Inspect the current session")
 def read_session(user: OptionalUser, session: SessionDep) -> SessionResponse:
     """Report who the caller is, if anyone.

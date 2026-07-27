@@ -28,7 +28,7 @@ os.environ["ALLOW_HOST_TEST_EXECUTION"] = "false"
 
 @pytest.fixture(scope="session")
 def client() -> Iterator[TestClient]:  # noqa: F821
-    """A TestClient with the lifespan run, so the demo workspace is seeded."""
+    """A TestClient with the lifespan run, so the fixture workspace is seeded."""
     from fastapi.testclient import TestClient
 
     from app.main import app
@@ -39,9 +39,20 @@ def client() -> Iterator[TestClient]:  # noqa: F821
 
 @pytest.fixture(scope="session")
 def authed_client(client):
-    """TestClient carrying a demo session cookie."""
-    response = client.post("/api/v1/auth/demo")
-    assert response.status_code == 200, response.text
+    """TestClient authenticated as the account that owns the seeded fixtures.
+
+    There is no demo sign-in endpoint, so the session is minted directly rather
+    than through HTTP. That keeps the tests independent of how humans log in.
+    """
+    from app.core.config import settings
+    from app.db.session import session_scope
+    from app.services import auth as auth_service
+
+    with session_scope() as session:
+        user = auth_service.get_or_create_fixture_user(session)
+        token = auth_service.issue_session(user)
+
+    client.cookies.set(settings.cookie_name, token)
     return client
 
 

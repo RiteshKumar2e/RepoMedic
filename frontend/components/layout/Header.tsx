@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronDown, Github, LogOut, Settings, Sparkles, User } from "lucide-react";
+import { ChevronDown, Github, LogOut, Settings, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,7 @@ function sectionLabel(pathname: string | null): string {
 }
 
 export function Header() {
-  const { user, isAuthenticated, isDemo, logout, isSigningOut } = useAuth();
+  const { user, isAuthenticated, logout, isSigningOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -57,13 +57,6 @@ export function Header() {
       </nav>
 
       <div className="flex items-center gap-2">
-        {isDemo && (
-          <span className="hidden items-center gap-1.5 rounded-md border border-medium-line bg-medium-soft px-2 py-1 text-[11px] font-medium text-medium sm:inline-flex">
-            <Sparkles className="h-3 w-3" />
-            Demo workspace
-          </span>
-        )}
-
         <a
           href="https://github.com"
           target="_blank"
@@ -116,7 +109,7 @@ export function Header() {
                 <div className="border-b border-line px-3 py-2.5">
                   <p className="truncate text-[13px] font-medium text-ink">{displayName}</p>
                   <p className="truncate text-[12px] text-ink-muted">
-                    {user?.email || (isDemo ? "Seeded demo account" : "No email on file")}
+                    {user?.email || "No email on file"}
                   </p>
                 </div>
 

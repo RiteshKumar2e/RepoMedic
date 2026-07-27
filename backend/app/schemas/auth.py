@@ -86,7 +86,3 @@ class SessionResponse(BaseModel):
     authenticated: bool = True
     github_connected: bool = False
     token: str | None = None
-
-
-class DemoLoginResponse(SessionResponse):
-    pass

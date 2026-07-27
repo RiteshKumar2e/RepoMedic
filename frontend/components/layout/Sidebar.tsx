@@ -11,7 +11,6 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -23,7 +22,6 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { isDemo } = useAuth();
 
   return (
     <aside className="sticky top-0 z-30 flex h-screen w-60 shrink-0 flex-col border-r border-line bg-surface">
@@ -61,15 +59,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-
-      {isDemo && (
-        <div className="mx-2 mb-2 rounded-md border border-medium-line bg-medium-soft px-3 py-2">
-          <p className="text-[11px] font-semibold text-medium">Demo workspace</p>
-          <p className="mt-0.5 text-[11px] leading-snug text-ink-muted">
-            Seeded from a local fixture repository. GitHub writes are disabled.
-          </p>
-        </div>
-      )}
 
       <div className="border-t border-line px-4 py-3">
         <p className="font-mono text-[11px] text-ink-subtle">v0.5.0</p>

@@ -50,7 +50,7 @@ from app.scanners.base import ScanRequest
 from app.scanners.security_scanners import BuiltinSecretScanner, PromptInjectionScanner
 from app.services import audit, detection
 from app.services.analysis_pipeline import _build_summary, context_findings
-from app.services.auth import get_or_create_demo_user
+from app.services.auth import get_or_create_fixture_user
 from app.services.dedupe import merge_findings
 from app.services.duplication import detect_duplicate_logic
 from app.services.repositories import get_or_create_settings
@@ -78,7 +78,7 @@ async def seed_demo_workspace(force: bool = False) -> str | None:
         return None
 
     with session_scope() as session:
-        user = get_or_create_demo_user(session)
+        user = get_or_create_fixture_user(session)
         installation = _ensure_installation(session, user.id)
         repository = _ensure_repository(session, installation.id)
         pull_request = _ensure_pull_request(session, repository)

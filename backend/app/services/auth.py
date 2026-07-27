@@ -16,8 +16,8 @@ from app.models.entities import GitHubInstallation, User, utcnow
 
 logger = get_logger(__name__)
 
-DEMO_USER_LOGIN = "demo-user"
-DEMO_USER_EMAIL = "demo@repomedic.dev"
+FIXTURE_USER_LOGIN = "demo-user"
+FIXTURE_USER_EMAIL = "demo@repomedic.dev"
 
 @lru_cache(maxsize=1)
 def _dummy_hash() -> str:
@@ -126,14 +126,18 @@ def _login_from_email(session: Session, email: str) -> str:
     return candidate
 
 
-def get_or_create_demo_user(session: Session) -> User:
-    """The seeded account used by demo mode — never has real GitHub credentials."""
-    user = session.exec(select(User).where(User.login == DEMO_USER_LOGIN)).first()
+def get_or_create_fixture_user(session: Session) -> User:
+    """Owner of the seeded fixture workspace, for local development and tests.
+
+    There is no sign-in path to this account — it has no password and no GitHub
+    credential — so it is unreachable on a deployment that does not seed.
+    """
+    user = session.exec(select(User).where(User.login == FIXTURE_USER_LOGIN)).first()
     if user is None:
         user = User(
-            login=DEMO_USER_LOGIN,
-            name="Demo Reviewer",
-            email=DEMO_USER_EMAIL,
+            login=FIXTURE_USER_LOGIN,
+            name="Fixture Reviewer",
+            email=FIXTURE_USER_EMAIL,
             avatar_url="https://avatars.githubusercontent.com/u/9919?v=4",
             is_demo=True,
         )

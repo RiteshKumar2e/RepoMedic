@@ -1,13 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getCurrentSession,
-  loginAsDemoUser,
-  loginWithPassword,
-  logoutUser,
-  registerUser,
-} from "@/lib/auth";
+import { getCurrentSession, loginWithPassword, logoutUser, registerUser } from "@/lib/auth";
 import type { User } from "@/types/api";
 
 const SESSION_KEY = ["auth-session"];
@@ -36,7 +30,6 @@ export function useAuth() {
 
   const registerMutation = useMutation({ mutationFn: registerUser, onSuccess: onAuthenticated });
   const loginMutation = useMutation({ mutationFn: loginWithPassword, onSuccess: onAuthenticated });
-  const demoLoginMutation = useMutation({ mutationFn: loginAsDemoUser, onSuccess: onAuthenticated });
 
   const logoutMutation = useMutation({
     mutationFn: logoutUser,
@@ -53,7 +46,6 @@ export function useAuth() {
     user: sessionQuery.data?.user ?? null,
     isAuthenticated: sessionQuery.data?.authenticated ?? false,
     isLoading: sessionQuery.isLoading,
-    isDemo: sessionQuery.data?.user?.is_demo ?? false,
     githubConnected: sessionQuery.data?.github_connected ?? false,
 
     register: registerMutation.mutateAsync,
@@ -61,9 +53,6 @@ export function useAuth() {
 
     login: loginMutation.mutateAsync,
     isSigningIn: loginMutation.isPending,
-
-    demoLogin: demoLoginMutation.mutateAsync,
-    isLoggingIn: demoLoginMutation.isPending,
 
     logout: logoutMutation.mutateAsync,
     isSigningOut: logoutMutation.isPending,

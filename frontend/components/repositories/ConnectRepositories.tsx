@@ -11,13 +11,12 @@ import { APIError } from "@/lib/api";
 /**
  * The single entry point for getting repositories into the workspace.
  *
- * Three states, because the honest action differs:
- *  - demo account      → cannot sync at all, say so rather than failing on click
+ * Two states, because the honest action differs:
  *  - no GitHub linked  → send the user through OAuth first
  *  - GitHub linked     → import/refresh the repository list
  */
 export function ConnectRepositories({ size = "default" }: { size?: "default" | "sm" }) {
-  const { isDemo, githubConnected } = useAuth();
+  const { githubConnected } = useAuth();
   const sync = useSyncRepositories();
   const [error, setError] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
@@ -47,16 +46,6 @@ export function ConnectRepositories({ size = "default" }: { size?: "default" | "
       setError(err instanceof APIError ? err.message : "Could not reach the server.");
     }
   };
-
-  if (isDemo) {
-    return (
-      <p className="flex items-start gap-1.5 text-[12px] text-ink-muted">
-        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-medium" />
-        The demo workspace holds no GitHub credential. Sign in with GitHub to connect your own
-        repositories.
-      </p>
-    );
-  }
 
   return (
     <div className="space-y-2">
