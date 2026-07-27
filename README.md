@@ -269,8 +269,8 @@ most:
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `DATABASE_URL` | *(empty)* | Empty uses local SQLite at `backend/data/repomedic.db`. See the Turso note below. |
-| `DATABASE_AUTH_TOKEN` | *(empty)* | Turso auth token. |
+| `DATABASE_URL` | *(empty)* | Empty uses local SQLite at `backend/data/repomedic.db`. `libsql://<db>.turso.io` uses Turso — see the note below. |
+| `DATABASE_AUTH_TOKEN` | *(empty)* | Turso auth token (`turso db tokens create <db>`). |
 | `JWT_SECRET` | *(derived in dev)* | Session signing key. **Required outside development.** |
 | `ENCRYPTION_KEY` | *(derived in dev)* | **Must be a Fernet key**, not `openssl rand -hex 32`. Encrypts GitHub tokens at rest. |
 | `DEMO_MODE` | `true` | Seeds the demo workspace on boot. |
@@ -283,11 +283,17 @@ most:
 | `MAX_ANALYSIS_COST_USD` | — | Hard budget cap per analysis. |
 | `REDIS_URL` | *(empty)* | Falls back to an in-process queue when absent. |
 
-> **Note on Turso.** This project targets Turso through the `sqlite+libsql` dialect, but the
-> installed driver stack (`sqlalchemy-libsql` 0.1.0 / `libsql-client` 0.3.1) speaks **only**
-> the WebSocket transport, and current Turso databases serve **only** HTTP `/v2/pipeline` —
-> the WebSocket handshake is rejected with `400`. Until a driver with HTTP-transport support
-> is used, leave `DATABASE_URL` empty and run on local SQLite.
+> **Note on Turso.** Set `DATABASE_URL=libsql://<your-db>.turso.io` plus `DATABASE_AUTH_TOKEN`
+> and it works — the URL is routed to a custom dialect in
+> [`backend/app/db/libsql_dialect.py`](backend/app/db/libsql_dialect.py) that reaches Turso
+> over the **HTTP** transport.
+>
+> This dialect exists because the stock `sqlite+libsql` driver
+> (`sqlalchemy-libsql` 0.1.0 / `libsql-client` 0.3.1) speaks **only** WebSocket, and current
+> Turso databases reject the WebSocket handshake with `400`. Upgrading is not an option
+> either: `sqlalchemy-libsql` 0.2.0 depends on `libsql-experimental`, which ships no wheel for
+> CPython 3.10 on Windows. The `libsql` package does ship wheels and speaks HTTP, so the
+> dialect adapts it to SQLAlchemy. **Do not switch `DATABASE_URL` back to `sqlite+libsql://`.**
 
 ### Database schema
 
@@ -569,8 +575,8 @@ Repository code is treated as **untrusted input** throughout.
 
 These are real constraints, not future work:
 
-- **Turso is currently unreachable** from this driver stack — see the configuration note
-  above. Run on local SQLite.
+- **Turso needs the bundled custom dialect** (`app/db/libsql_dialect.py`), because the stock
+  `sqlite+libsql` driver cannot connect. See the configuration note above.
 - **No Alembic revisions.** Schema comes from `create_all` plus an additive-column step.
 - **Language coverage** is Python, JavaScript and TypeScript. Java, Go, Rust and C++ plug
   into the same analyzer interface but are not implemented.

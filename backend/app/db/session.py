@@ -20,9 +20,15 @@ from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 _url = settings.sqlalchemy_url
+
+if "libsql_http" in _url:
+    # Registers the sqlite+libsql_http dialect; must happen before create_engine.
+    import app.db.libsql_dialect  # noqa: F401
+
 _connect_args: dict = {}
-if _url.startswith("sqlite"):
+if _url.startswith("sqlite:"):
     # FastAPI serves requests on a thread pool; sessions are per-request.
+    # The remote dialect sets this itself, so only the local file path needs it.
     _connect_args["check_same_thread"] = False
 
 engine: Engine = create_engine(

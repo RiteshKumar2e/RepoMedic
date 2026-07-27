@@ -147,11 +147,18 @@ class Settings(BaseSettings):
             data_dir = BACKEND_ROOT / "data"
             data_dir.mkdir(parents=True, exist_ok=True)
             return f"sqlite:///{(data_dir / 'repomedic.db').as_posix()}"
-        if url.startswith("libsql://"):
-            url = "sqlite+" + url
-        if url.startswith("sqlite+libsql://") and self.database_auth_token:
+
+        # Route Turso through the HTTP-transport dialect in app/db/libsql_dialect.py.
+        # The stock sqlite+libsql driver only speaks WebSocket, which Turso now
+        # rejects with a 400 handshake.
+        for prefix in ("libsql://", "sqlite+libsql://"):
+            if url.startswith(prefix):
+                url = "sqlite+libsql_http://" + url[len(prefix) :]
+                break
+
+        if url.startswith("sqlite+libsql_http://") and self.database_auth_token:
             joiner = "&" if "?" in url else "?"
-            url = f"{url}{joiner}authToken={self.database_auth_token}&secure=true"
+            url = f"{url}{joiner}authToken={self.database_auth_token}"
         return url
 
     @property

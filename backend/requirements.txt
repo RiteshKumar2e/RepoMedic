@@ -10,8 +10,13 @@ sse-starlette==2.2.1
 sqlmodel==0.0.22
 SQLAlchemy==2.0.36
 alembic==1.14.0
+# Turso is reached through app/db/libsql_dialect.py, which drives `libsql`
+# (HTTP transport, prebuilt wheels). sqlalchemy-libsql/libsql-client are kept
+# only because they register the stock sqlite+libsql name; they speak WebSocket
+# only, which Turso now rejects with a 400 handshake.
 sqlalchemy-libsql==0.1.0
 libsql-client==0.3.1
+libsql==0.1.11
 
 # ---- HTTP / auth / crypto ----
 httpx==0.28.1
