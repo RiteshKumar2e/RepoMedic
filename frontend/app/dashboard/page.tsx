@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 import {
   FolderGit2,
@@ -24,18 +23,13 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDate, formatDuration, getSeverityBadgeColor } from "@/lib/utils";
 import type { Severity } from "@/types/api";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 
-export default function DashboardPage() {
-  const { user, isDemo, demoLogin } = useAuth();
+function DashboardPage() {
+  // RequireAuth guarantees a session before this renders — no silent sign-in.
+  const { user, isDemo } = useAuth();
   const { data: repositories, isLoading: reposLoading, refetch: refetchRepos } = useRepositories();
   const { data: analytics } = useAnalytics();
-
-  // Auto-login as demo user if not logged in
-  useEffect(() => {
-    if (!user) {
-      demoLogin();
-    }
-  }, [user, demoLogin]);
 
   return (
     <div className="min-h-screen bg-canvas flex text-ink">
@@ -244,5 +238,13 @@ export default function DashboardPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function DashboardPageRoute() {
+  return (
+    <RequireAuth>
+      <DashboardPage />
+    </RequireAuth>
   );
 }

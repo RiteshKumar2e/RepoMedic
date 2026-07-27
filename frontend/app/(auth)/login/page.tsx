@@ -1,102 +1,192 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ShieldCheck, Github, Sparkles, Lock, CheckCircle2, ArrowRight } from "lucide-react";
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AlertCircle, Github, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
-import { api } from "@/lib/api";
+import { Input, Label, FieldError } from "@/components/ui/Input";
+import { startGitHubOAuth } from "@/lib/auth";
+import { APIError } from "@/lib/api";
 
-export default function LoginPage() {
-  const { demoLogin, isLoggingIn } = useAuth();
+function LoginForm() {
   const router = useRouter();
-  const [isGitHubConnecting, setIsGitHubConnecting] = useState(false);
+  const searchParams = useSearchParams();
+  const { login, demoLogin, isSigningIn, isLoggingIn } = useAuth();
 
-  const handleDemoClick = async () => {
-    await demoLogin();
-    router.push("/dashboard");
-  };
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [gitHubState, setGitHubState] = useState<"idle" | "redirecting" | "unavailable">("idle");
 
-  const handleGitHubAuth = async () => {
-    setIsGitHubConnecting(true);
+  // Set by RequireAuth when it bounces an unauthenticated visit.
+  const nextPath = searchParams.get("next") || "/dashboard";
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError(null);
     try {
-      const res = await api.post<{ authorize_url: string; configured: boolean }>("/auth/github", {
-        redirect_path: "/dashboard",
-      });
-      if (res.configured && res.authorize_url) {
-        window.location.href = res.authorize_url;
-      } else {
-        // Fallback to demo mode if GitHub OAuth isn't configured in environment
-        await demoLogin();
-        router.push("/dashboard");
-      }
-    } catch {
-      await demoLogin();
-      router.push("/dashboard");
-    } finally {
-      setIsGitHubConnecting(false);
+      await login({ email, password });
+      router.replace(nextPath);
+    } catch (err) {
+      setError(
+        err instanceof APIError ? err.message : "Could not reach the server. Please try again.",
+      );
     }
   };
 
+  const handleGitHub = async () => {
+    setError(null);
+    setGitHubState("redirecting");
+    try {
+      const res = await startGitHubOAuth(nextPath);
+      if (res.configured && res.authorize_url) {
+        window.location.href = res.authorize_url;
+        return;
+      }
+      // Honest failure: this deployment has no GitHub credentials configured.
+      setGitHubState("unavailable");
+    } catch {
+      setGitHubState("unavailable");
+    }
+  };
+
+  const handleDemo = async () => {
+    setError(null);
+    try {
+      await demoLogin();
+      router.replace("/dashboard");
+    } catch {
+      setError("Demo mode is disabled on this deployment.");
+    }
+  };
+
+  const busy = isSigningIn || isLoggingIn || gitHubState === "redirecting";
+
   return (
-    <div className="min-h-screen bg-canvas flex flex-col items-center justify-center p-6 relative">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-md bg-accent-soft border border-accent-line flex items-center justify-center text-accent mx-auto mb-3">
-            <ShieldCheck className="w-7 h-7" />
-          </div>
-          <h1 className="text-2xl font-semibold text-ink">Welcome to RepoMedic</h1>
-          <p className="text-xs text-ink-muted mt-1">Connect your account or explore seeded demo mode</p>
+    <AuthShell
+      title="Sign in to RepoMedic"
+      subtitle="Review, validate and ship fixes with your whole repository in context."
+      footer={
+        <span>
+          New to RepoMedic?{" "}
+          <Link href="/register" className="font-medium text-accent hover:underline">
+            Create an account
+          </Link>
+        </span>
+      }
+    >
+      <div className="space-y-5">
+        <Button
+          type="button"
+          onClick={handleGitHub}
+          disabled={busy}
+          className="h-9 w-full gap-2"
+          variant="secondary"
+        >
+          {gitHubState === "redirecting" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Github className="h-4 w-4" />
+          )}
+          {gitHubState === "redirecting" ? "Redirecting to GitHub…" : "Continue with GitHub"}
+        </Button>
+
+        {gitHubState === "unavailable" && (
+          <p className="flex gap-1.5 text-[12px] text-ink-muted">
+            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-medium" />
+            GitHub sign-in is not configured on this deployment. Use an email account or the demo
+            workspace below.
+          </p>
+        )}
+
+        <div className="relative text-center">
+          <span className="absolute inset-x-0 top-1/2 border-t border-line" aria-hidden />
+          <span className="relative bg-canvas px-3 font-mono text-[11px] uppercase tracking-wider text-ink-subtle">
+            or
+          </span>
         </div>
 
-        <Card className="border-line bg-surface shadow-sm">
-          <CardHeader className="text-center">
-            <CardTitle>Authentication</CardTitle>
-            <CardDescription>Minimum required permissions requested</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              onClick={handleGitHubAuth}
-              disabled={isGitHubConnecting}
-              className="w-full h-11 bg-inset hover:bg-inset text-ink border border-line flex items-center justify-center gap-2 text-sm"
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@company.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={Boolean(error)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-baseline justify-between">
+              <Label htmlFor="password">Password</Label>
+            </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="••••••••••"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "login-error" : undefined}
+            />
+          </div>
+
+          {error && (
+            <div
+              id="login-error"
+              role="alert"
+              className="flex items-start gap-2 rounded-md border border-critical-line bg-critical-soft px-3 py-2"
             >
-              <Github className="w-4 h-4" />
-              {isGitHubConnecting ? "Connecting to GitHub..." : "Continue with GitHub"}
-            </Button>
-
-            <div className="relative my-4 text-center">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-line" />
-              </div>
-              <span className="relative bg-surface px-3 text-[11px] font-mono text-ink-subtle uppercase">
-                Or explore without login
-              </span>
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-critical" />
+              <FieldError>{error}</FieldError>
             </div>
+          )}
 
-            <Button
-              onClick={handleDemoClick}
-              disabled={isLoggingIn}
-              variant="secondary"
-              className="w-full h-11 bg-medium-soft hover:bg-medium-soft text-medium border border-medium-line flex items-center justify-center gap-2 text-sm"
-            >
-              <Sparkles className="w-4 h-4" />
-              {isLoggingIn ? "Preparing Demo Environment..." : "Explore Seeded Demo Mode"}
-            </Button>
-          </CardContent>
+          <Button type="submit" variant="default" disabled={busy} className="h-9 w-full">
+            {isSigningIn && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isSigningIn ? "Signing in…" : "Sign in"}
+          </Button>
+        </form>
 
-          <CardFooter className="flex flex-col items-start gap-2 bg-canvas text-[11px] text-ink-muted">
-            <div className="flex items-center gap-1.5 text-ink-muted">
-              <Lock className="w-3.5 h-3.5 text-success" />
-              <span>Read-only code access. Secrets are redacted automatically.</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-ink-muted">
-              <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-              <span>Full audit logging for all review actions and PR creations.</span>
-            </div>
-          </CardFooter>
-        </Card>
+        <div className="rounded-md border border-line bg-surface px-3 py-3">
+          <p className="text-[12px] text-ink-muted">
+            Want to look around first? The demo workspace is seeded from a local fixture repository
+            — no GitHub access, no writes.
+          </p>
+          <Button
+            type="button"
+            onClick={handleDemo}
+            disabled={busy}
+            variant="ghost"
+            size="sm"
+            className="mt-2 gap-1.5 px-0 hover:bg-transparent hover:text-accent"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            {isLoggingIn ? "Preparing demo…" : "Explore the demo workspace"}
+          </Button>
+        </div>
       </div>
-    </div>
+    </AuthShell>
+  );
+}
+
+export default function LoginPage() {
+  // useSearchParams needs a Suspense boundary for static rendering.
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-canvas" />}>
+      <LoginForm />
+    </Suspense>
   );
 }

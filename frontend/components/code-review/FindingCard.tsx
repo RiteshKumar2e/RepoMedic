@@ -48,7 +48,7 @@ export function FindingCard({
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-            <Badge variant={finding.severity as any}>{finding.severity.toUpperCase()}</Badge>
+            <Badge variant={finding.severity}>{finding.severity.toUpperCase()}</Badge>
             <span className="text-[11px] font-mono text-ink-muted bg-inset px-2 py-0.5 rounded">
               {finding.category}
             </span>

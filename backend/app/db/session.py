@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 
-from sqlalchemy import event
+from sqlalchemy import event, inspect, text
 from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -44,11 +44,31 @@ def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record) -> None:
         pass
 
 
+# Columns added after a database was first created. ``create_all`` only creates
+# missing *tables*, so an existing deployment needs the ALTER explicitly. Keep
+# entries additive and nullable — this runs on every boot.
+_ADDITIVE_COLUMNS: tuple[tuple[str, str, str], ...] = (("users", "password_hash", "TEXT"),)
+
+
+def _apply_additive_columns() -> None:
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+    for table, column, column_type in _ADDITIVE_COLUMNS:
+        if table not in existing_tables:
+            continue
+        if column in {c["name"] for c in inspector.get_columns(table)}:
+            continue
+        with engine.begin() as connection:
+            connection.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {column_type}"))
+        logger.info("database.column_added", table=table, column=column)
+
+
 def init_db() -> None:
     """Create tables when running without Alembic (dev, tests, demo)."""
     import app.models  # noqa: F401  ensures every table is registered
 
     SQLModel.metadata.create_all(engine)
+    _apply_additive_columns()
     logger.info("database.initialised", dialect=engine.dialect.name, turso=settings.is_turso)
 
 

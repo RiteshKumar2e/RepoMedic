@@ -53,7 +53,7 @@ export function FileTree({ files, selectedFile, onSelectFile, findings }: FileTr
 
               {count > 0 && (
                 <Badge
-                  variant={(topSeverity as any) || "medium"}
+                  variant={topSeverity ?? "medium"}
                   className="px-1.5 py-0 text-[10px] h-4 font-mono shrink-0 ml-1"
                 >
                   {count}

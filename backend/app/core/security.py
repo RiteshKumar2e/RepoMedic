@@ -48,6 +48,51 @@ def decrypt_secret(ciphertext: str) -> str:
 
 
 # --------------------------------------------------------------------------- #
+# Account passwords
+#
+# PBKDF2-HMAC-SHA256 from the standard library: no extra dependency to install,
+# which keeps the offline-first promise intact. Iterations follow the OWASP
+# recommendation and are stored per-hash so the cost can be raised later
+# without invalidating existing credentials.
+# --------------------------------------------------------------------------- #
+_PBKDF2_ALGORITHM = "pbkdf2_sha256"
+_PBKDF2_ITERATIONS = 600_000
+_SALT_BYTES = 16
+
+
+def hash_password(password: str) -> str:
+    """Return ``pbkdf2_sha256$iterations$salt$hash`` — safe to store verbatim."""
+    if not password:
+        raise ValueError("Password must not be empty")
+    salt = secrets.token_bytes(_SALT_BYTES)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, _PBKDF2_ITERATIONS)
+    return "$".join(
+        (
+            _PBKDF2_ALGORITHM,
+            str(_PBKDF2_ITERATIONS),
+            base64.urlsafe_b64encode(salt).decode(),
+            base64.urlsafe_b64encode(digest).decode(),
+        )
+    )
+
+
+def verify_password(password: str, stored_hash: str) -> bool:
+    """Constant-time check. Any malformed or absent hash simply fails."""
+    if not password or not stored_hash:
+        return False
+    try:
+        algorithm, iterations, salt_b64, digest_b64 = stored_hash.split("$", 3)
+        if algorithm != _PBKDF2_ALGORITHM:
+            return False
+        salt = base64.urlsafe_b64decode(salt_b64)
+        expected = base64.urlsafe_b64decode(digest_b64)
+        candidate = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, int(iterations))
+    except (ValueError, TypeError):
+        return False
+    return hmac.compare_digest(candidate, expected)
+
+
+# --------------------------------------------------------------------------- #
 # Session JWTs
 # --------------------------------------------------------------------------- #
 def create_session_token(user_id: str, extra: dict[str, Any] | None = None) -> str:

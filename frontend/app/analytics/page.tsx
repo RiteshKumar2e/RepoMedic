@@ -6,8 +6,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { BarChart3, TrendingUp, ShieldAlert, CheckCircle2, Clock } from "lucide-react";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 
-export default function AnalyticsPage() {
+function AnalyticsPage() {
   const { data: analytics } = useAnalytics();
 
   const categories = [
@@ -95,5 +96,13 @@ export default function AnalyticsPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function AnalyticsPageRoute() {
+  return (
+    <RequireAuth>
+      <AnalyticsPage />
+    </RequireAuth>
   );
 }

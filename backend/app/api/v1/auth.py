@@ -8,15 +8,17 @@ from sqlmodel import select
 
 from app.api.deps import CurrentUser, RateLimited, SessionDep, client_ip
 from app.core.config import settings
-from app.core.errors import AuthenticationError
+from app.core.errors import AuthenticationError, ConflictError
 from app.core.logging import get_logger
 from app.core.security import create_oauth_state, verify_oauth_state
 from app.github.client import GitHubClient
 from app.github.oauth import build_authorize_url, exchange_code_for_token
-from app.models.entities import GitHubInstallation
+from app.models.entities import GitHubInstallation, User
 from app.schemas.auth import (
     GitHubAuthStartRequest,
     GitHubAuthStartResponse,
+    LoginRequest,
+    RegisterRequest,
     SessionResponse,
     UserRead,
 )
@@ -26,6 +28,15 @@ from app.services import auth as auth_service
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _start_session(response: Response, user: User) -> str:
+    """Issue the session token and attach the hardened cookie."""
+    token = auth_service.issue_session(user)
+    response.set_cookie(
+        value=token, max_age=settings.jwt_expire_minutes * 60, **auth_service.cookie_kwargs()
+    )
+    return token
 
 
 @router.post(
@@ -91,6 +102,81 @@ async def github_callback(
 
 
 @router.post(
+    "/register",
+    response_model=SessionResponse,
+    status_code=201,
+    dependencies=[RateLimited],
+    summary="Create an email and password account",
+)
+def register(
+    payload: RegisterRequest,
+    request: Request,
+    response: Response,
+    session: SessionDep,
+) -> SessionResponse:
+    """Provision the account and sign the new user straight in."""
+    try:
+        user = auth_service.register_user(
+            session, name=payload.name, email=payload.email, password=payload.password
+        )
+    except auth_service.EmailAlreadyRegisteredError as exc:
+        raise ConflictError("An account with that email already exists") from exc
+
+    token = _start_session(response, user)
+    audit.record(
+        session,
+        action="auth.register",
+        entity_type="user",
+        entity_id=user.id,
+        user_id=user.id,
+        metadata={"method": "password"},
+        ip_address=client_ip(request),
+    )
+    return SessionResponse(
+        user=UserRead.model_validate(user), github_connected=False, token=token
+    )
+
+
+@router.post(
+    "/login",
+    response_model=SessionResponse,
+    dependencies=[RateLimited],
+    summary="Sign in with email and password",
+)
+def login(
+    payload: LoginRequest,
+    request: Request,
+    response: Response,
+    session: SessionDep,
+) -> SessionResponse:
+    user = auth_service.authenticate_user(
+        session, email=payload.email, password=payload.password
+    )
+    if user is None:
+        # One message for both causes — never disclose which addresses exist.
+        raise AuthenticationError("Incorrect email or password")
+
+    token = _start_session(response, user)
+    audit.record(
+        session,
+        action="auth.login",
+        entity_type="user",
+        entity_id=user.id,
+        user_id=user.id,
+        metadata={"method": "password"},
+        ip_address=client_ip(request),
+    )
+    installation = session.exec(
+        select(GitHubInstallation).where(GitHubInstallation.user_id == user.id)
+    ).first()
+    return SessionResponse(
+        user=UserRead.model_validate(user),
+        github_connected=bool(installation and installation.encrypted_access_token),
+        token=token,
+    )
+
+
+@router.post(
     "/demo",
     response_model=SessionResponse,
     dependencies=[RateLimited],
@@ -102,10 +188,7 @@ def demo_login(request: Request, response: Response, session: SessionDep) -> Ses
         raise AuthenticationError("Demo mode is disabled on this deployment")
 
     user = auth_service.get_or_create_demo_user(session)
-    token = auth_service.issue_session(user)
-    response.set_cookie(
-        value=token, max_age=settings.jwt_expire_minutes * 60, **auth_service.cookie_kwargs()
-    )
+    token = _start_session(response, user)
     audit.record(
         session,
         action="auth.login",

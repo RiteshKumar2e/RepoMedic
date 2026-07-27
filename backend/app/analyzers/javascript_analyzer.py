@@ -265,9 +265,13 @@ def _function_name(node: Any, source: bytes) -> str:
     name_node = node.child_by_field_name("name")
     if name_node is not None:
         return node_text(name_node, source)
-    if node.type == "arrow_function" and node.parent is not None:
-        if node.parent.type == "variable_declarator":
-            return _identifier(node.parent, source)
+    # `const handler = () => {}` names the function via its declarator.
+    if (
+        node.type == "arrow_function"
+        and node.parent is not None
+        and node.parent.type == "variable_declarator"
+    ):
+        return _identifier(node.parent, source)
     return _identifier(node, source)
 
 

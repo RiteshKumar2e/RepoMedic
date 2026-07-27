@@ -58,6 +58,9 @@ class User(SQLModel, table=True):
     name: Optional[str] = None
     email: Optional[str] = Field(default=None, index=True)
     avatar_url: Optional[str] = None
+    # PBKDF2 digest for email/password accounts; ``None`` for GitHub-only and
+    # demo users. Plaintext passwords never reach this module.
+    password_hash: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
     is_demo: bool = Field(default=False, index=True)
     created_at: datetime = Field(default_factory=utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=utcnow, nullable=False)

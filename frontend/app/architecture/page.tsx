@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { GitFork, FileCode2, Layers, AlertTriangle, ArrowRight, ShieldCheck, Zap } from "lucide-react";
 import { useRepositoryGraph } from "@/hooks/useGraph";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 
 const SEEDED_GRAPH_NODES = [
   { id: "file:app/api/checkout.py", label: "checkout.py", type: "module", changed: true, language: "python" },
@@ -24,7 +25,7 @@ const SEEDED_GRAPH_EDGES = [
   { id: "e4", source: "file:app/services/discounts.py", target: "file:app/core/config.py", type: "imports" },
 ];
 
-export default function ArchitectureGraphPage() {
+function ArchitectureGraphPage() {
   const { data: graph } = useRepositoryGraph("demo-repo-id");
   const [selectedNode, setSelectedNode] = useState<string | null>("file:app/api/checkout.py");
 
@@ -139,5 +140,13 @@ export default function ArchitectureGraphPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ArchitectureGraphPageRoute() {
+  return (
+    <RequireAuth>
+      <ArchitectureGraphPage />
+    </RequireAuth>
   );
 }

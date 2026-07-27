@@ -10,8 +10,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { usePullRequest, useTriggerAnalysis } from "@/hooks/usePullRequests";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 
-export default function PullRequestDetailPage({ params }: { params: Promise<{ pullRequestId: string }> }) {
+function PullRequestDetailPage({ params }: { params: Promise<{ pullRequestId: string }> }) {
   const resolvedParams = use(params);
   const prId = resolvedParams.pullRequestId;
   const { data: pr } = usePullRequest(prId);
@@ -102,5 +103,13 @@ export default function PullRequestDetailPage({ params }: { params: Promise<{ pu
         </main>
       </div>
     </div>
+  );
+}
+
+export default function PullRequestDetailPageRoute(props: Parameters<typeof PullRequestDetailPage>[0]) {
+  return (
+    <RequireAuth>
+      <PullRequestDetailPage {...props} />
+    </RequireAuth>
   );
 }

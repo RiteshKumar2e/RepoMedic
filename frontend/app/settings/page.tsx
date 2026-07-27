@@ -7,8 +7,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Settings, Cpu, ShieldCheck, DollarSign, Save, Sliders, CheckCircle2 } from "lucide-react";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 
-export default function SettingsPage() {
+function SettingsPage() {
   const [provider, setProvider] = useState("gemini");
   const [model, setModel] = useState("gemini-2.5-flash");
   const [severityThreshold, setSeverityThreshold] = useState("low");
@@ -154,5 +155,13 @@ export default function SettingsPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPageRoute() {
+  return (
+    <RequireAuth>
+      <SettingsPage />
+    </RequireAuth>
   );
 }

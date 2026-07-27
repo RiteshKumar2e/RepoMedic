@@ -10,8 +10,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useRepository } from "@/hooks/useRepositories";
 import { usePullRequests, useTriggerAnalysis } from "@/hooks/usePullRequests";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 
-export default function RepositoryDetailPage({ params }: { params: Promise<{ repositoryId: string }> }) {
+function RepositoryDetailPage({ params }: { params: Promise<{ repositoryId: string }> }) {
   const resolvedParams = use(params);
   const repoId = resolvedParams.repositoryId;
   const { data: repo } = useRepository(repoId);
@@ -113,5 +114,13 @@ export default function RepositoryDetailPage({ params }: { params: Promise<{ rep
         </main>
       </div>
     </div>
+  );
+}
+
+export default function RepositoryDetailPageRoute(props: Parameters<typeof RepositoryDetailPage>[0]) {
+  return (
+    <RequireAuth>
+      <RepositoryDetailPage {...props} />
+    </RequireAuth>
   );
 }

@@ -96,8 +96,13 @@ export default function LandingPage() {
               {isLoggingIn ? "Starting…" : "Try the demo"}
             </Button>
             <Link href="/login">
-              <Button variant="default" size="sm">
+              <Button variant="secondary" size="sm">
                 Sign in
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button variant="default" size="sm">
+                Get started
               </Button>
             </Link>
           </div>
@@ -128,9 +133,9 @@ export default function LandingPage() {
                 {isLoggingIn ? "Starting demo…" : "Explore the demo"}
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Link href="/login">
+              <Link href="/register">
                 <Button variant="secondary" size="lg">
-                  Connect a repository
+                  Create an account
                 </Button>
               </Link>
             </div>

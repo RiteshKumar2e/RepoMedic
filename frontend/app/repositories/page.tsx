@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useRepositories } from "@/hooks/useRepositories";
 import { formatDate } from "@/lib/utils";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 
-export default function RepositoriesPage() {
+function RepositoriesPage() {
   const { data: repositories, isLoading } = useRepositories();
 
   const repoList = repositories?.length
@@ -90,5 +91,13 @@ export default function RepositoriesPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function RepositoriesPageRoute() {
+  return (
+    <RequireAuth>
+      <RepositoriesPage />
+    </RequireAuth>
   );
 }

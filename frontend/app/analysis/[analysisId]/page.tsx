@@ -15,6 +15,7 @@ import { useFindings } from "@/hooks/useFindings";
 import { usePatchActions } from "@/hooks/usePatches";
 import { Github, CheckCircle2, Sparkles, Send } from "lucide-react";
 import type { Finding, Severity } from "@/types/api";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 
 // Seeded fixture data for demo workspace if API query is pending/demo
 const SEEDED_FILES = [
@@ -114,7 +115,7 @@ const SEEDED_FINDINGS: Finding[] = [
   },
 ];
 
-export default function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
+function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
   const resolvedParams = use(params);
   const analysisId = resolvedParams.analysisId;
 
@@ -238,5 +239,13 @@ export default function AnalysisPage({ params }: { params: Promise<{ analysisId:
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AnalysisPageRoute(props: Parameters<typeof AnalysisPage>[0]) {
+  return (
+    <RequireAuth>
+      <AnalysisPage {...props} />
+    </RequireAuth>
   );
 }

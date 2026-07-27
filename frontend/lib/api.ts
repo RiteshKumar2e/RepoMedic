@@ -1,4 +1,4 @@
-import type { SSEProgressEvent } from "@/types/api";
+import type { JsonObject, SSEProgressEvent } from "@/types/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -17,8 +17,22 @@ export function getAuthToken(): string | null {
   return null;
 }
 
+/** The envelope every backend error handler in app/main.py produces. */
+interface ErrorEnvelope {
+  error?: {
+    code?: string;
+    message?: string;
+    details?: JsonObject;
+  };
+}
+
 export class APIError extends Error {
-  constructor(public status: number, public code: string, message: string, public details?: any) {
+  constructor(
+    public status: number,
+    public code: string,
+    message: string,
+    public details?: JsonObject,
+  ) {
     super(message);
     this.name = "APIError";
   }
@@ -44,9 +58,9 @@ async function fetcher<T>(endpoint: string, options: RequestInit = {}): Promise<
   });
 
   if (!res.ok) {
-    let errorPayload: any = {};
+    let errorPayload: ErrorEnvelope = {};
     try {
-      errorPayload = await res.json();
+      errorPayload = (await res.json()) as ErrorEnvelope;
     } catch {
       // Not JSON
     }
@@ -64,13 +78,13 @@ async function fetcher<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   get: <T>(endpoint: string, options?: RequestInit) => fetcher<T>(endpoint, { ...options, method: "GET" }),
-  post: <T>(endpoint: string, body?: any, options?: RequestInit) =>
+  post: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     fetcher<T>(endpoint, {
       ...options,
       method: "POST",
       body: body ? JSON.stringify(body) : undefined,
     }),
-  put: <T>(endpoint: string, body?: any, options?: RequestInit) =>
+  put: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     fetcher<T>(endpoint, {
       ...options,
       method: "PUT",

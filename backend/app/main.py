@@ -116,13 +116,28 @@ async def repomedic_error_handler(_request: Request, exc: RepoMedicError) -> JSO
 
 @app.exception_handler(RequestValidationError)
 async def validation_error_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
+    """Report which field failed and why, without echoing the rejected input.
+
+    Pydantic puts the raw value in ``input`` and the original exception object in
+    ``ctx`` — neither is JSON-serialisable in general, and the input may be a
+    password, so both are dropped rather than serialised.
+    """
+    errors = [
+        {
+            "field": ".".join(str(part) for part in error.get("loc", ()) if part != "body"),
+            "message": error.get("msg", "Invalid value"),
+            "type": error.get("type", "value_error"),
+        }
+        for error in exc.errors()[:10]
+    ]
+    message = errors[0]["message"] if errors else "Request validation failed"
     return JSONResponse(
         status_code=422,
         content={
             "error": {
                 "code": "validation_error",
-                "message": "Request validation failed",
-                "details": {"errors": exc.errors()[:10]},
+                "message": message,
+                "details": {"errors": errors},
             }
         },
     )

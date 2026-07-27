@@ -1,3 +1,12 @@
+/**
+ * Free-form JSON the API stores in a column and does not promise a shape for
+ * (metrics, manifests, tool output). Narrow it at the point of use rather than
+ * reaching for `any`.
+ */
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
+export type JsonObject = Record<string, JsonValue>;
+
 export type Severity = "critical" | "high" | "medium" | "low" | "informational";
 
 export type FindingCategory =
@@ -95,8 +104,8 @@ export interface RepositorySettings {
   preferred_llm_model?: string | null;
   max_analysis_cost: number;
   excluded_paths: string[];
-  custom_rules: Record<string, any>[];
-  notification_settings: Record<string, any>;
+  custom_rules: JsonObject[];
+  notification_settings: JsonObject;
   data_retention_minutes: number;
 }
 
@@ -173,7 +182,7 @@ export interface Analysis {
   scanners_run: string[];
   reviewers_run: string[];
   stage_timings: Record<string, number>;
-  context_manifest: Record<string, any>;
+  context_manifest: JsonObject;
   summary?: string | null;
   triggered_by: string;
   started_at?: string | null;
@@ -220,8 +229,8 @@ export interface ValidationRun {
   tests_passed?: boolean | null;
   security_scan_passed?: boolean | null;
   semantic_similarity: number;
-  tests_before: Record<string, any>;
-  tests_after: Record<string, any>;
+  tests_before: JsonObject;
+  tests_after: JsonObject;
   step_results: Array<{
     name: string;
     status: string;
@@ -270,7 +279,7 @@ export interface GraphNode {
   start_line: number;
   end_line: number;
   changed: boolean;
-  metrics: Record<string, any>;
+  metrics: JsonObject;
 }
 
 export interface GraphEdge {
