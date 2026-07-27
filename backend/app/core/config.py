@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     cookie_name: str = "repomedic_session"
     cookie_secure: bool = False
     cookie_domain: str = ""
+    # "lax" is right when the API and the app share a site. Split deployments
+    # (Vercel frontend + Render backend) are cross-site, where the browser drops
+    # a Lax cookie entirely — those need "none", which also forces Secure.
+    cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     # ---- GitHub ----------------------------------------------------------
     github_client_id: str = ""

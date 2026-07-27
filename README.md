@@ -252,7 +252,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
 ### Backend — `backend/.env`
 
-See [backend/.env.example](backend/.env.example) for all 44 variables. The ones that matter
+See [backend/.env.example](backend/.env.example) for all 45 variables. The ones that matter
 most:
 
 | Variable                                        | Default              | Purpose                                                                                                               |
@@ -267,6 +267,7 @@ most:
 | `LOCAL_LLM_BASE_URL`                          | *(empty)*          | Any OpenAI-shaped server — Ollama, vLLM, LM Studio.                                                                  |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | *(empty)*          | Required for GitHub sign-in and repository import.                                                                    |
 | `GITHUB_WEBHOOK_SECRET`                       | *(empty)*          | Validates webhook signatures.                                                                                         |
+| `COOKIE_SAMESITE`                             | `lax`              | Use `none` when the app and API are on different sites — see [DEPLOYMENT.md](DEPLOYMENT.md).                          |
 | `SANDBOX_MODE`                                | `subprocess`       | `docker`, `subprocess` or `disabled`. Use `docker` in production.                                             |
 | `MAX_ANALYSIS_COST_USD`                       | —                   | Hard budget cap per analysis.                                                                                         |
 | `REDIS_URL`                                   | *(empty)*          | Falls back to an in-process queue when absent.                                                                        |
@@ -515,23 +516,27 @@ npm run build       # production build
 
 ## Deployment
 
-**Frontend → Vercel**
+**📘 See [DEPLOYMENT.md](DEPLOYMENT.md)** for the full step-by-step guide — Vercel (frontend),
+Render (backend) and Turso (database), with an environment-variable reference, a
+troubleshooting table and a production checklist.
+
+The short version:
 
 ```bash
-cd frontend
-npx vercel
+# Frontend → Vercel  (root directory: frontend)
+cd frontend && npx vercel --prod
+
+# Backend → Render / Fly.io  (Docker, root directory: backend)
+cd backend && docker build -t repomedic-api .
 ```
 
-**Backend → Railway / Render / Fly.io**
+For production set `APP_ENV=production`, a real `JWT_SECRET`, a genuine Fernet
+`ENCRYPTION_KEY`, and `COOKIE_SECURE=true`.
 
-```bash
-cd backend
-docker build -t repomedic-api .
-```
-
-For production, set `APP_ENV=production`, provide a real `JWT_SECRET` and a valid Fernet
-`ENCRYPTION_KEY`, set `COOKIE_SECURE=true`, and use `SANDBOX_MODE=docker` so repository
-code and tests execute in a container rather than a subprocess.
+> **If the app and API are on different domains** — the usual Vercel + Render split — you
+> must also set `COOKIE_SAMESITE=none`. A `SameSite=Lax` cookie is never sent cross-site, and
+> the SSE progress stream authenticates by cookie because `EventSource` cannot send a bearer
+> token. Without it, sign-in works but live analysis progress silently stalls.
 
 ---
 

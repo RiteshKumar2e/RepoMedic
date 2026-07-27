@@ -149,11 +149,14 @@ def issue_session(user: User) -> str:
 
 def cookie_kwargs() -> dict[str, Any]:
     """Hardened cookie attributes shared by login and logout."""
+    same_site = settings.cookie_samesite
     kwargs: dict[str, Any] = {
         "key": settings.cookie_name,
         "httponly": True,
-        "secure": settings.cookie_secure or settings.is_production,
-        "samesite": "lax",
+        # SameSite=None is only honoured on a Secure cookie; browsers reject the
+        # pair otherwise, which would silently drop the session.
+        "secure": settings.cookie_secure or settings.is_production or same_site == "none",
+        "samesite": same_site,
         "path": "/",
     }
     if settings.cookie_domain:
