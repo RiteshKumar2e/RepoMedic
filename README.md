@@ -1,19 +1,5 @@
 <div align="center">
 
-# 🏥 RepoMedic
-
-### Diagnose Code. Repair Faster. Ship Confidently.
-
-Repository-aware AI code review that finds architectural, security, performance and
-reliability defects — and **proves every proposed fix works before you are asked to approve it**.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-green.svg)](https://python.org)
-[![Next.js 16](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-teal.svg)](https://fastapi.tiangolo.com)
-
-</div>
-
 ---
 
 ## Table of contents
@@ -71,17 +57,17 @@ attached to the patch. **If the fix fails validation, you see that it failed.**
 
 ## What you actually get
 
-| Benefit | What it means in practice |
-|---|---|
-| **Cross-file defects get caught** | A knowledge graph of symbols, imports and calls resolves blast radius, so a change is reviewed against the code that depends on it — not in isolation. |
-| **Findings you can verify** | Every finding names a file and line, explains the failure it causes, cites the tools that corroborate it, and carries a confidence score. Nothing is "the AI thinks so." |
-| **Fixes that are already tested** | Each patch is applied in a sandbox and re-parsed, linted, type-checked, security-scanned and tested against the baseline. You review a *proven* diff, not a suggestion. |
-| **Far fewer false positives** | Findings from multiple sources are deduplicated and merged into one ranked list with corroboration, instead of three tools shouting the same thing at three severities. |
-| **It cannot quietly break your repo** | Auto-apply is off by default. Approved fixes only ever open a new branch — never a commit to your default branch. |
-| **Your secrets do not leave** | Secrets are detected and redacted before any content reaches a model, and each analysis records exactly what was transmitted. |
-| **Malicious repos cannot hijack the review** | Prompt-injection attempts hidden in comments, READMEs, base64 or zero-width characters are neutralised and reported as findings. |
-| **It runs with zero API keys** | A built-in heuristic engine is the default provider, so the whole product works offline. Add a Gemini or Groq key only when you want model-backed reasoning. |
-| **Predictable cost** | Per-analysis budget caps, token accounting and context limits are enforced before a request is made. |
+| Benefit                                            | What it means in practice                                                                                                                                                |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Cross-file defects get caught**            | A knowledge graph of symbols, imports and calls resolves blast radius, so a change is reviewed against the code that depends on it — not in isolation.                  |
+| **Findings you can verify**                  | Every finding names a file and line, explains the failure it causes, cites the tools that corroborate it, and carries a confidence score. Nothing is "the AI thinks so." |
+| **Fixes that are already tested**            | Each patch is applied in a sandbox and re-parsed, linted, type-checked, security-scanned and tested against the baseline. You review a*proven* diff, not a suggestion. |
+| **Far fewer false positives**                | Findings from multiple sources are deduplicated and merged into one ranked list with corroboration, instead of three tools shouting the same thing at three severities.  |
+| **It cannot quietly break your repo**        | Auto-apply is off by default. Approved fixes only ever open a new branch — never a commit to your default branch.                                                       |
+| **Your secrets do not leave**                | Secrets are detected and redacted before any content reaches a model, and each analysis records exactly what was transmitted.                                            |
+| **Malicious repos cannot hijack the review** | Prompt-injection attempts hidden in comments, READMEs, base64 or zero-width characters are neutralised and reported as findings.                                         |
+| **It runs with zero API keys**               | A built-in heuristic engine is the default provider, so the whole product works offline. Add a Gemini or Groq key only when you want model-backed reasoning.             |
+| **Predictable cost**                         | Per-analysis budget caps, token accounting and context limits are enforced before a request is made.                                                                     |
 
 ---
 
@@ -90,15 +76,15 @@ attached to the patch. **If the fix fails validation, you see that it failed.**
 The analysis pipeline runs in a fixed order. Each stage narrows what the next one has to
 consider.
 
-| # | Stage | What happens |
-|---|---|---|
-| **01** | **Isolate** | The pull request is cloned into a disposable, size-capped workspace with no network access. Repository code never executes on the host and is deleted after the retention window. |
-| **02** | **Parse** | Python is parsed with the stdlib `ast`; JavaScript and TypeScript with tree-sitter. Symbols, imports and calls become a knowledge graph. |
-| **03** | **Scan** | Ruff, Bandit, Mypy, ESLint, tsc, Semgrep, Gitleaks and OSV run — before any model. Output is normalised into one schema and deduplicated. |
-| **04** | **Retrieve** | Only the changed hunks plus graph-adjacent code are selected as context. The model never receives the whole repository. |
-| **05** | **Review** | Five specialist agents (architecture, security, performance, reliability, testing) assess what deterministic tools cannot judge. |
-| **06** | **Rank** | Findings are merged, corroborated across sources, scored and ordered by severity and confidence. |
-| **07** | **Patch** | Fixes are generated AST-aware — modifying the syntax tree, not blind text replacement. |
+| #            | Stage              | What happens                                                                                                                                                                                                                                                         |
+| ------------ | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **01** | **Isolate**  | The pull request is cloned into a disposable, size-capped workspace with no network access. Repository code never executes on the host and is deleted after the retention window.                                                                                    |
+| **02** | **Parse**    | Python is parsed with the stdlib`ast`; JavaScript and TypeScript with tree-sitter. Symbols, imports and calls become a knowledge graph.                                                                                                                            |
+| **03** | **Scan**     | Ruff, Bandit, Mypy, ESLint, tsc, Semgrep, Gitleaks and OSV run — before any model. Output is normalised into one schema and deduplicated.                                                                                                                           |
+| **04** | **Retrieve** | Only the changed hunks plus graph-adjacent code are selected as context. The model never receives the whole repository.                                                                                                                                              |
+| **05** | **Review**   | Five specialist agents (architecture, security, performance, reliability, testing) assess what deterministic tools cannot judge.                                                                                                                                     |
+| **06** | **Rank**     | Findings are merged, corroborated across sources, scored and ordered by severity and confidence.                                                                                                                                                                     |
+| **07** | **Patch**    | Fixes are generated AST-aware — modifying the syntax tree, not blind text replacement.                                                                                                                                                                              |
 | **08** | **Validate** | Each patch is applied in the sandbox and run through six steps — parse, lint, type-check, security scan, tests against the baseline, and semantic similarity. Each step short-circuits the ones that cannot follow, and a skipped step is recorded with its reason. |
 
 Results stream to the browser over Server-Sent Events, so you watch the pipeline progress
@@ -140,9 +126,11 @@ API on `http://localhost:8000` · interactive docs on `http://localhost:8000/doc
 
 > **Generating secrets.** `JWT_SECRET` can be any random string, but `ENCRYPTION_KEY` **must
 > be a Fernet key** — a hex string will fail at the first token write:
+>
 > ```bash
 > python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 > ```
+>
 > Leave both blank in development and deterministic dev-only values are derived
 > automatically.
 
@@ -189,11 +177,11 @@ docker compose up --build
 
 Open `http://localhost:3000`. There are three ways in:
 
-| Option | Use it when |
-|---|---|
-| **Explore the demo workspace** | You want to see the product immediately. No account, no GitHub. Seeded from a local fixture repository; GitHub writes are disabled. |
-| **Create an account** (`/register`) | Email and password. Requires 10+ characters with a letter and a number. |
-| **Continue with GitHub** | You want to review your own repositories. Requires `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`. |
+| Option                                      | Use it when                                                                                                                         |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Explore the demo workspace**        | You want to see the product immediately. No account, no GitHub. Seeded from a local fixture repository; GitHub writes are disabled. |
+| **Create an account** (`/register`) | Email and password. Requires 10+ characters with a letter and a number.                                                             |
+| **Continue with GitHub**              | You want to review your own repositories. Requires`GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`.                                  |
 
 ### Step 2 — Connect repositories
 
@@ -267,21 +255,21 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 See [backend/.env.example](backend/.env.example) for all 44 variables. The ones that matter
 most:
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `DATABASE_URL` | *(empty)* | Empty uses local SQLite at `backend/data/repomedic.db`. `libsql://<db>.turso.io` uses Turso — see the note below. |
-| `DATABASE_AUTH_TOKEN` | *(empty)* | Turso auth token (`turso db tokens create <db>`). |
-| `JWT_SECRET` | *(derived in dev)* | Session signing key. **Required outside development.** |
-| `ENCRYPTION_KEY` | *(derived in dev)* | **Must be a Fernet key**, not `openssl rand -hex 32`. Encrypts GitHub tokens at rest. |
-| `DEMO_MODE` | `true` | Seeds the demo workspace on boot. |
-| `DEFAULT_LLM_PROVIDER` | `heuristic` | `gemini`, `groq`, `local` or `heuristic` (offline, no key). |
-| `GEMINI_API_KEY` / `GROQ_API_KEY` | *(empty)* | Only needed for model-backed reasoning. |
-| `LOCAL_LLM_BASE_URL` | *(empty)* | Any OpenAI-shaped server — Ollama, vLLM, LM Studio. |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | *(empty)* | Required for GitHub sign-in and repository import. |
-| `GITHUB_WEBHOOK_SECRET` | *(empty)* | Validates webhook signatures. |
-| `SANDBOX_MODE` | `subprocess` | `docker`, `subprocess` or `disabled`. Use `docker` in production. |
-| `MAX_ANALYSIS_COST_USD` | — | Hard budget cap per analysis. |
-| `REDIS_URL` | *(empty)* | Falls back to an in-process queue when absent. |
+| Variable                                        | Default              | Purpose                                                                                                               |
+| ----------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                | *(empty)*          | Empty uses local SQLite at`backend/data/repomedic.db`. `libsql://<db>.turso.io` uses Turso — see the note below. |
+| `DATABASE_AUTH_TOKEN`                         | *(empty)*          | Turso auth token (`turso db tokens create <db>`).                                                                   |
+| `JWT_SECRET`                                  | *(derived in dev)* | Session signing key.**Required outside development.**                                                           |
+| `ENCRYPTION_KEY`                              | *(derived in dev)* | **Must be a Fernet key**, not `openssl rand -hex 32`. Encrypts GitHub tokens at rest.                         |
+| `DEMO_MODE`                                   | `true`             | Seeds the demo workspace on boot.                                                                                     |
+| `DEFAULT_LLM_PROVIDER`                        | `heuristic`        | `gemini`, `groq`, `local` or `heuristic` (offline, no key).                                                   |
+| `GEMINI_API_KEY` / `GROQ_API_KEY`           | *(empty)*          | Only needed for model-backed reasoning.                                                                               |
+| `LOCAL_LLM_BASE_URL`                          | *(empty)*          | Any OpenAI-shaped server — Ollama, vLLM, LM Studio.                                                                  |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | *(empty)*          | Required for GitHub sign-in and repository import.                                                                    |
+| `GITHUB_WEBHOOK_SECRET`                       | *(empty)*          | Validates webhook signatures.                                                                                         |
+| `SANDBOX_MODE`                                | `subprocess`       | `docker`, `subprocess` or `disabled`. Use `docker` in production.                                             |
+| `MAX_ANALYSIS_COST_USD`                       | —                   | Hard budget cap per analysis.                                                                                         |
+| `REDIS_URL`                                   | *(empty)*          | Falls back to an in-process queue when absent.                                                                        |
 
 > **Note on Turso.** Set `DATABASE_URL=libsql://<your-db>.turso.io` plus `DATABASE_AUTH_TOKEN`
 > and it works — the URL is routed to a custom dialect in
@@ -445,57 +433,57 @@ Full interactive documentation at `http://localhost:8000/docs`.
 
 ### Auth
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/v1/auth/register` | Create an email + password account |
-| `POST` | `/api/v1/auth/login` | Sign in with email + password |
-| `POST` | `/api/v1/auth/github` | Start the GitHub OAuth flow |
-| `GET` | `/api/v1/auth/github/callback` | OAuth callback |
-| `POST` | `/api/v1/auth/demo` | Sign in to the seeded demo workspace |
-| `GET` | `/api/v1/auth/session` | Current session — returns `200` with `authenticated: false` when anonymous |
-| `POST` | `/api/v1/auth/logout` | Clear the session cookie |
+| Method   | Endpoint                         | Description                                                                    |
+| -------- | -------------------------------- | ------------------------------------------------------------------------------ |
+| `POST` | `/api/v1/auth/register`        | Create an email + password account                                             |
+| `POST` | `/api/v1/auth/login`           | Sign in with email + password                                                  |
+| `POST` | `/api/v1/auth/github`          | Start the GitHub OAuth flow                                                    |
+| `GET`  | `/api/v1/auth/github/callback` | OAuth callback                                                                 |
+| `POST` | `/api/v1/auth/demo`            | Sign in to the seeded demo workspace                                           |
+| `GET`  | `/api/v1/auth/session`         | Current session — returns`200` with `authenticated: false` when anonymous |
+| `POST` | `/api/v1/auth/logout`          | Clear the session cookie                                                       |
 
 ### Repositories & pull requests
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/repositories` | List connected repositories |
-| `POST` | `/api/v1/repositories/sync` | Import repositories from GitHub |
-| `GET` | `/api/v1/repositories/{id}` | Repository detail |
-| `GET` | `/api/v1/repositories/{id}/pull-requests` | List pull requests |
-| `POST` | `/api/v1/repositories/{id}/pull-requests/sync` | Re-sync pull requests |
-| `GET` | `/api/v1/repositories/{id}/settings` · `PUT` | Read / update review settings |
-| `GET` | `/api/v1/pull-requests/{id}` | Pull-request detail |
-| `GET` | `/api/v1/pull-requests/{id}/analyses` | Analysis history |
-| `POST` | `/api/v1/pull-requests/{id}/analyze` | Queue an analysis |
+| Method   | Endpoint                                          | Description                     |
+| -------- | ------------------------------------------------- | ------------------------------- |
+| `GET`  | `/api/v1/repositories`                          | List connected repositories     |
+| `POST` | `/api/v1/repositories/sync`                     | Import repositories from GitHub |
+| `GET`  | `/api/v1/repositories/{id}`                     | Repository detail               |
+| `GET`  | `/api/v1/repositories/{id}/pull-requests`       | List pull requests              |
+| `POST` | `/api/v1/repositories/{id}/pull-requests/sync`  | Re-sync pull requests           |
+| `GET`  | `/api/v1/repositories/{id}/settings` · `PUT` | Read / update review settings   |
+| `GET`  | `/api/v1/pull-requests/{id}`                    | Pull-request detail             |
+| `GET`  | `/api/v1/pull-requests/{id}/analyses`           | Analysis history                |
+| `POST` | `/api/v1/pull-requests/{id}/analyze`            | Queue an analysis               |
 
 ### Analyses, findings & patches
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/analyses/{id}` | Analysis detail |
-| `GET` | `/api/v1/analyses/{id}/events` | SSE progress stream |
-| `GET` | `/api/v1/analyses/{id}/findings` | Findings, with filters |
-| `GET` | `/api/v1/analyses/{id}/patches` | Patches for an analysis |
-| `POST` | `/api/v1/analyses/{id}/cancel` | Cancel a running analysis |
-| `POST` | `/api/v1/analyses/{id}/publish-review` | Post the review to GitHub |
-| `POST` | `/api/v1/analyses/{id}/create-fix-pr` | Open a fix PR on a new branch |
-| `GET` | `/api/v1/findings/{id}` | Finding detail |
-| `PATCH` | `/api/v1/findings/{id}/status` | Update finding status |
-| `POST` | `/api/v1/findings/{id}/generate-fix` | Generate a patch |
-| `POST` | `/api/v1/patches/{id}/validate` · `/approve` · `/reject` | Patch lifecycle |
+| Method    | Endpoint                                                         | Description                   |
+| --------- | ---------------------------------------------------------------- | ----------------------------- |
+| `GET`   | `/api/v1/analyses/{id}`                                        | Analysis detail               |
+| `GET`   | `/api/v1/analyses/{id}/events`                                 | SSE progress stream           |
+| `GET`   | `/api/v1/analyses/{id}/findings`                               | Findings, with filters        |
+| `GET`   | `/api/v1/analyses/{id}/patches`                                | Patches for an analysis       |
+| `POST`  | `/api/v1/analyses/{id}/cancel`                                 | Cancel a running analysis     |
+| `POST`  | `/api/v1/analyses/{id}/publish-review`                         | Post the review to GitHub     |
+| `POST`  | `/api/v1/analyses/{id}/create-fix-pr`                          | Open a fix PR on a new branch |
+| `GET`   | `/api/v1/findings/{id}`                                        | Finding detail                |
+| `PATCH` | `/api/v1/findings/{id}/status`                                 | Update finding status         |
+| `POST`  | `/api/v1/findings/{id}/generate-fix`                           | Generate a patch              |
+| `POST`  | `/api/v1/patches/{id}/validate` · `/approve` · `/reject` | Patch lifecycle               |
 
 ### Graph, analytics & system
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/repositories/{id}/graph` | Knowledge graph |
-| `GET` | `/api/v1/repositories/{id}/graph/impact` | Impact paths for findings |
-| `GET` | `/api/v1/repositories/{id}/analytics` | Per-repository analytics |
-| `GET` | `/api/v1/dashboard` | Workspace-wide summary |
-| `GET` | `/api/v1/capabilities` | Which scanners and providers are usable right now |
-| `GET` | `/api/v1/health` | Health check |
-| `POST` | `/api/v1/webhooks/github` | GitHub webhook receiver |
+| Method   | Endpoint                                   | Description                                       |
+| -------- | ------------------------------------------ | ------------------------------------------------- |
+| `GET`  | `/api/v1/repositories/{id}/graph`        | Knowledge graph                                   |
+| `GET`  | `/api/v1/repositories/{id}/graph/impact` | Impact paths for findings                         |
+| `GET`  | `/api/v1/repositories/{id}/analytics`    | Per-repository analytics                          |
+| `GET`  | `/api/v1/dashboard`                      | Workspace-wide summary                            |
+| `GET`  | `/api/v1/capabilities`                   | Which scanners and providers are usable right now |
+| `GET`  | `/api/v1/health`                         | Health check                                      |
+| `POST` | `/api/v1/webhooks/github`                | GitHub webhook receiver                           |
 
 ---
 
