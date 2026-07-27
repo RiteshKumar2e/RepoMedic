@@ -151,8 +151,13 @@ export interface PullRequest {
   html_url?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** GET /pull-requests/{id} — adds the fields only the detail route returns. */
+export interface PullRequestDetail extends PullRequest {
   repository?: Repository | null;
-  latest_analysis?: Analysis | null;
+  latest_analysis_id?: string | null;
+  analysis_count: number;
 }
 
 export interface AnalysisSummaryStats {
@@ -270,14 +275,30 @@ export interface Patch {
   finding?: Finding;
 }
 
+/* Mirrors backend/app/schemas/graph.py. Most node fields are nullable there,
+   so they are optional here — the previous shape claimed a `metrics` object the
+   API never sends. */
+
+export type GraphNodeType =
+  | "file"
+  | "module"
+  | "class"
+  | "function"
+  | "route"
+  | "model"
+  | "test"
+  | "dependency";
+
 export interface GraphNode {
   id: string;
   label: string;
-  type: string;
-  file_path: string;
-  language: string;
-  start_line: number;
-  end_line: number;
+  type: GraphNodeType | string;
+  file_path?: string | null;
+  language?: string | null;
+  start_line?: number | null;
+  end_line?: number | null;
+  finding_count: number;
+  max_severity?: Severity | null;
   changed: boolean;
   metrics: JsonObject;
 }
@@ -290,14 +311,13 @@ export interface GraphEdge {
   weight: number;
 }
 
+/** GET /repositories/{id}/graph */
 export interface KnowledgeGraphData {
   nodes: GraphNode[];
   edges: GraphEdge[];
-  metrics: {
-    total_nodes: number;
-    total_edges: number;
-    changed_nodes: number;
-  };
+  generated_at?: string | null;
+  truncated: boolean;
+  stats: Record<string, number>;
 }
 
 /* The shapes below mirror backend/app/schemas/analytics.py exactly. They used

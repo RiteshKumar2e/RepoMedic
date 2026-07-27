@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatDuration, getSeverityBadgeColor } from "@/lib/utils";
 import type { Severity } from "@/types/api";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { ConnectRepositories } from "@/components/repositories/ConnectRepositories";
 
 function DashboardPage() {
   // RequireAuth guarantees a session before this renders — no silent sign-in.
@@ -127,20 +128,17 @@ function DashboardPage() {
               <CardContent className="space-y-3">
                 {reposLoading ? (
                   <div className="p-4 text-center text-xs text-ink-subtle">Loading repositories...</div>
+                ) : (repositories?.length ?? 0) === 0 ? (
+                  <div className="space-y-3 p-4 text-center">
+                    <p className="text-xs text-ink-muted">No repositories connected yet.</p>
+                    <div className="flex justify-center">
+                      <ConnectRepositories size="sm" />
+                    </div>
+                  </div>
                 ) : (
-                  (repositories || [
-                    {
-                      id: "demo-repo-id",
-                      full_name: "ecommerce-api-demo",
-                      owner: "repomedic-demo",
-                      name: "ecommerce-api-demo",
-                      description: "E-Commerce REST API with payment, discount, and checkout routes",
-                      primary_language: "Python",
-                      open_pr_count: 1,
-                      stars: 42,
-                      last_analyzed_at: new Date().toISOString(),
-                    },
-                  ]).map((repo) => (
+                  // Links use the real id — a placeholder repository used to
+                  // render here and every link off it 404'd.
+                  (repositories ?? []).map((repo) => (
                     <div
                       key={repo.id}
                       className="p-3.5 rounded-lg border border-line bg-canvas hover:border-line transition-colors flex items-center justify-between"

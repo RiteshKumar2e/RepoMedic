@@ -6,10 +6,15 @@ import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
-import { Settings, Cpu, DollarSign, Save, Sliders } from "lucide-react";
+import { Settings, Cpu, DollarSign, Save, Sliders, Github } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { ConnectRepositories } from "@/components/repositories/ConnectRepositories";
+import { useAuth } from "@/hooks/useAuth";
+import { useRepositories } from "@/hooks/useRepositories";
 
 function SettingsPage() {
+  const { user, githubConnected } = useAuth();
+  const { data: repositories } = useRepositories();
   const [provider, setProvider] = useState("gemini");
   const [model, setModel] = useState("gemini-2.5-flash");
   const [severityThreshold, setSeverityThreshold] = useState("low");
@@ -51,6 +56,40 @@ function SettingsPage() {
               <Save className="w-4 h-4" /> {saved ? "Settings Saved!" : "Save Settings"}
             </Button>
           </div>
+
+          {/* Source control connection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Github className="w-4 h-4 text-accent" /> GitHub Connection
+              </CardTitle>
+              <CardDescription>
+                Import the repositories RepoMedic is allowed to review
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2 text-xs">
+                <span
+                  className={`inline-flex h-2 w-2 rounded-full ${
+                    githubConnected ? "bg-success" : "bg-ink-subtle"
+                  }`}
+                  aria-hidden
+                />
+                <span className="text-ink">
+                  {githubConnected
+                    ? `Connected as ${user?.login ?? user?.name ?? "your GitHub account"}`
+                    : "Not connected"}
+                </span>
+                <span className="text-ink-muted">
+                  •{" "}
+                  {repositories?.length ?? 0}{" "}
+                  {repositories?.length === 1 ? "repository" : "repositories"} imported
+                </span>
+              </div>
+
+              <ConnectRepositories size="sm" />
+            </CardContent>
+          </Card>
 
           {/* AI Model Provider Configuration */}
           <Card>

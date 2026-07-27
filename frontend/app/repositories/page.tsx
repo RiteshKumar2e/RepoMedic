@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { useRepositories } from "@/hooks/useRepositories";
 import { formatDate } from "@/lib/utils";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { ConnectRepositories } from "@/components/repositories/ConnectRepositories";
 
 function RepositoriesPage() {
   const { data: repositories, isLoading } = useRepositories();
@@ -25,11 +26,12 @@ function RepositoriesPage() {
         <Header />
 
         <main className="flex-1 p-6 space-y-6 overflow-y-auto">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h1 className="text-xl font-semibold text-ink">Connected Repositories</h1>
               <p className="text-xs text-ink-muted mt-1">Manage scanned repositories and review configurations</p>
             </div>
+            <ConnectRepositories size="sm" />
           </div>
 
           {isLoading && (
@@ -38,12 +40,15 @@ function RepositoriesPage() {
 
           {!isLoading && repoList.length === 0 && (
             <Card>
-              <CardContent className="p-6 text-center">
-                <p className="text-sm font-medium text-ink">No repositories connected yet</p>
-                <p className="mt-1 text-xs text-ink-muted">
-                  Connect your GitHub account from Settings, or sign in to the demo workspace to
-                  explore a seeded repository.
-                </p>
+              <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
+                <FolderGit2 className="h-8 w-8 text-ink-subtle" />
+                <div>
+                  <p className="text-sm font-medium text-ink">No repositories connected yet</p>
+                  <p className="mt-1 text-xs text-ink-muted">
+                    Import the repositories your GitHub account can access to start reviewing them.
+                  </p>
+                </div>
+                <ConnectRepositories />
               </CardContent>
             </Card>
           )}

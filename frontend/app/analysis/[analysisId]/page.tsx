@@ -17,104 +17,6 @@ import { Github, Send } from "lucide-react";
 import type { Finding, Severity } from "@/types/api";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 
-// Seeded fixture data for demo workspace if API query is pending/demo
-const SEEDED_FILES = [
-  { path: "app/api/checkout.py", status: "modified" },
-  { path: "app/services/discounts.py", status: "modified" },
-  { path: "tests/test_checkout.py", status: "modified" },
-];
-
-const SEEDED_FINDINGS: Finding[] = [
-  {
-    id: "f-1",
-    analysis_id: "demo-analysis-id",
-    category: "security",
-    severity: "critical",
-    confidence: 0.95,
-    score: 95,
-    title: "SQL Injection vulnerability in discount lookup",
-    description: "Raw string interpolation inside SQL statement allows unauthorized database query execution.",
-    risk: "Attackers can bypass authentication and read sensitive user data.",
-    recommendation: "Use SQLAlchemy select() statement with bound parameters.",
-    file_path: "app/api/checkout.py",
-    start_line: 14,
-    end_line: 22,
-    code_snippet: 'query = f"SELECT * FROM discounts WHERE code = \'{code}\'"',
-    source: "bandit",
-    corroborating_sources: ["ai_security", "ast_rules"],
-    fingerprint: "fp-sqli-checkout",
-    status: "fix_proposed",
-    related_files: [],
-    score_breakdown: {},
-    created_at: new Date().toISOString(),
-    patches: [
-      {
-        id: "patch-1",
-        finding_id: "f-1",
-        file_path: "app/api/checkout.py",
-        original_code: `@app.post("/discounts/apply")\nasync function apply_discount(code: str, db: Session):\n    query = f"SELECT * FROM discounts WHERE code = '{code}'"\n    result = db.execute(text(query)).fetchone()\n    if not result:\n        raise HTTPException(404, "Invalid code")\n    return {"discount": result.amount}`,
-        suggested_code: `@app.post("/discounts/apply")\nasync function apply_discount(code: str, db: Session):\n    stmt = select(Discount).where(Discount.code == code)\n    result = db.exec(stmt).first()\n    if not result:\n        raise HTTPException(404, "Invalid code")\n    return {"discount": result.amount}`,
-        unified_diff: "@@ -14,7 +14,7 @@\n-    query = f\"SELECT * FROM discounts WHERE code = '{code}'\"\n-    result = db.execute(text(query)).fetchone()\n+    stmt = select(Discount).where(Discount.code == code)\n+    result = db.exec(stmt).first()",
-        explanation: "Replaced raw string query with parameterized SQLModel select statement.",
-        expected_impact: "Eliminates SQL injection risk completely.",
-        side_effects: [],
-        confidence: 0.98,
-        confidence_breakdown: {},
-        risk_level: "low",
-        status: "validated",
-        validation_status: "passed",
-        auto_apply_eligible: true,
-        generated_by: "fix_generator",
-        created_at: new Date().toISOString(),
-      },
-    ],
-  },
-  {
-    id: "f-2",
-    analysis_id: "demo-analysis-id",
-    category: "security",
-    severity: "high",
-    confidence: 0.9,
-    score: 90,
-    title: "Hardcoded API Key secret in discounts service",
-    description: "Hardcoded third-party provider secret key detected in source code.",
-    risk: "Exposes credentials if repository is pushed to public remotes.",
-    recommendation: "Load API key from environment variables via Settings.",
-    file_path: "app/services/discounts.py",
-    start_line: 8,
-    end_line: 12,
-    code_snippet: 'API_SECRET = "sk_live_99485720491823"',
-    source: "gitleaks",
-    corroborating_sources: ["ai_security"],
-    fingerprint: "fp-secret-discounts",
-    status: "fix_proposed",
-    related_files: [],
-    score_breakdown: {},
-    created_at: new Date().toISOString(),
-    patches: [
-      {
-        id: "patch-2",
-        finding_id: "f-2",
-        file_path: "app/services/discounts.py",
-        original_code: `API_SECRET = "sk_live_99485720491823"`,
-        suggested_code: `API_SECRET = settings.discount_api_key`,
-        unified_diff: `-API_SECRET = "sk_live_99485720491823"\n+API_SECRET = settings.discount_api_key`,
-        explanation: "Replaced hardcoded string with environment settings lookup.",
-        expected_impact: "Secures credentials against exfiltration.",
-        side_effects: [],
-        confidence: 0.95,
-        confidence_breakdown: {},
-        risk_level: "low",
-        status: "validated",
-        validation_status: "passed",
-        auto_apply_eligible: true,
-        generated_by: "fix_generator",
-        created_at: new Date().toISOString(),
-      },
-    ],
-  },
-];
-
 function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
   const resolvedParams = use(params);
   const analysisId = resolvedParams.analysisId;
@@ -124,10 +26,12 @@ function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
   const { approvePatch, rejectPatch, publishReview, createFixPR, isApproving, isRejecting, isPublishing, isCreatingPR } =
     usePatchActions(analysisId);
 
-  const findingsList = rawFindings?.length ? rawFindings : SEEDED_FINDINGS;
+  // Real findings only. This used to fall back to a hardcoded fixture, so a
+  // missing or 404'd analysis silently rendered invented vulnerabilities.
+  const findingsList = useMemo(() => rawFindings ?? [], [rawFindings]);
 
-  const [selectedFile, setSelectedFile] = useState<string>("app/api/checkout.py");
-  const [selectedFinding, setSelectedFinding] = useState<Finding | null>(SEEDED_FINDINGS[0]);
+  const [pickedFile, setPickedFile] = useState<string | null>(null);
+  const [pickedFinding, setPickedFinding] = useState<string | null>(null);
   const [selectedSeverities, setSelectedSeverities] = useState<Severity[]>([
     "critical",
     "high",
@@ -148,6 +52,21 @@ function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
     });
   }, [findingsList, selectedSeverities, searchQuery]);
 
+  // The changed-file list is derived from the findings themselves, so it always
+  // matches what the analysis actually reported.
+  const files = useMemo(
+    () =>
+      Array.from(new Set(findingsList.map((f) => f.file_path)))
+        .sort()
+        .map((path) => ({ path })),
+    [findingsList],
+  );
+
+  // Selections are derived so they can never point at a stale finding or file.
+  const selectedFinding =
+    findingsList.find((f) => f.id === pickedFinding) ?? filteredFindings[0] ?? null;
+  const selectedFile = pickedFile ?? selectedFinding?.file_path ?? files[0]?.path ?? "";
+
   const handleToggleSeverity = (sev: Severity) => {
     if (selectedSeverities.includes(sev)) {
       setSelectedSeverities(selectedSeverities.filter((s) => s !== sev));
@@ -157,8 +76,8 @@ function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
   };
 
   const handleSelectFinding = (finding: Finding) => {
-    setSelectedFinding(finding);
-    setSelectedFile(finding.file_path);
+    setPickedFinding(finding.id);
+    setPickedFile(finding.file_path);
   };
 
   return (
@@ -210,9 +129,9 @@ function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
         <div className="flex-1 flex min-h-0 overflow-hidden">
           {/* Left Panel: Changed File Tree */}
           <FileTree
-            files={SEEDED_FILES}
+            files={files}
             selectedFile={selectedFile}
-            onSelectFile={(path) => setSelectedFile(path)}
+            onSelectFile={(path) => setPickedFile(path)}
             findings={filteredFindings}
           />
 
@@ -220,8 +139,9 @@ function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
           <DiffViewer
             filePath={selectedFile}
             originalCode={
-              selectedFinding?.patches?.[0]?.original_code ||
-              `# Original code for ${selectedFile}\n@app.post("/discounts/apply")\nasync function apply_discount(code: str, db: Session):\n    query = f"SELECT * FROM discounts WHERE code = '{code}'"\n    return db.execute(text(query)).fetchone()`
+              selectedFinding?.patches?.[0]?.original_code ??
+              selectedFinding?.code_snippet ??
+              ""
             }
             suggestedCode={selectedFinding?.patches?.[0]?.suggested_code}
             highlightLine={selectedFinding?.start_line}

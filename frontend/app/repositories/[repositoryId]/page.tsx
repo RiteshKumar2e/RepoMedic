@@ -16,32 +16,11 @@ function RepositoryDetailPage({ params }: { params: Promise<{ repositoryId: stri
   const resolvedParams = use(params);
   const repoId = resolvedParams.repositoryId;
   const { data: repo } = useRepository(repoId);
-  const { data: pullRequests } = usePullRequests(repoId);
+  const { data: pullRequests, isLoading: prsLoading } = usePullRequests(repoId);
 
-  const prList = pullRequests?.length
-    ? pullRequests
-    : [
-        {
-          id: "demo-pr-id",
-          repository_id: repoId,
-          github_pr_number: 42,
-          title: "Add discount and checkout endpoints",
-          body: "Implements coupon validation and payment processing routes.",
-          author: "ritesh-kumar",
-          head_ref: "feature/checkout",
-          base_ref: "main",
-          status: "open",
-          additions: 145,
-          deletions: 12,
-          changed_files: 3,
-          created_at: new Date().toISOString(),
-          latest_analysis: {
-            id: "demo-analysis-id",
-            status: "completed",
-            summary: "1 Critical SQL injection, 1 High Authorization Bypass found",
-          },
-        },
-      ];
+  // Only real pull requests. A fabricated one used to render here, and opening
+  // it requested /pull-requests/demo-pr-id, which 404'd.
+  const prList = pullRequests ?? [];
 
   return (
     <div className="min-h-screen bg-canvas flex text-ink">
@@ -55,14 +34,14 @@ function RepositoryDetailPage({ params }: { params: Promise<{ repositoryId: stri
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
                 <FolderGit2 className="w-5 h-5 text-accent" />
-                <h1 className="text-xl font-semibold text-ink">{repo?.full_name || "ecommerce-api-demo"}</h1>
-                <Badge variant="outline" className="font-mono">
-                  {repo?.primary_language || "Python"}
-                </Badge>
+                <h1 className="text-xl font-semibold text-ink">{repo?.full_name ?? "Repository"}</h1>
+                {repo?.primary_language && (
+                  <Badge variant="outline" className="font-mono">
+                    {repo.primary_language}
+                  </Badge>
+                )}
               </div>
-              <p className="text-xs text-ink-muted">
-                {repo?.description || "E-Commerce REST API with payment, discount, and checkout routes"}
-              </p>
+              {repo?.description && <p className="text-xs text-ink-muted">{repo.description}</p>}
             </div>
 
             <Link href="/settings">
@@ -79,6 +58,14 @@ function RepositoryDetailPage({ params }: { params: Promise<{ repositoryId: stri
               <CardDescription>Select a pull request to run AI code analysis or review past reports</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              {prsLoading && <p className="text-xs text-ink-subtle">Loading pull requests…</p>}
+
+              {!prsLoading && prList.length === 0 && (
+                <p className="py-4 text-center text-xs text-ink-subtle">
+                  No pull requests found for this repository yet.
+                </p>
+              )}
+
               {prList.map((pr) => (
                 <div
                   key={pr.id}

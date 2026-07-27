@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { PullRequest, Analysis } from "@/types/api";
+import type { PullRequest, PullRequestDetail, Analysis } from "@/types/api";
 
 export function usePullRequests(repositoryId: string) {
   return useQuery({
@@ -15,7 +15,16 @@ export function usePullRequests(repositoryId: string) {
 export function usePullRequest(pullRequestId: string) {
   return useQuery({
     queryKey: ["pull-requests", pullRequestId],
-    queryFn: () => api.get<PullRequest>(`/pull-requests/${pullRequestId}`),
+    queryFn: () => api.get<PullRequestDetail>(`/pull-requests/${pullRequestId}`),
+    enabled: !!pullRequestId,
+  });
+}
+
+/** Newest first — the backend orders by created_at desc. */
+export function usePullRequestAnalyses(pullRequestId: string) {
+  return useQuery({
+    queryKey: ["pull-requests", pullRequestId, "analyses"],
+    queryFn: () => api.get<Analysis[]>(`/pull-requests/${pullRequestId}/analyses`),
     enabled: !!pullRequestId,
   });
 }

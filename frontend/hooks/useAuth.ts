@@ -22,8 +22,14 @@ export function useAuth() {
     retry: false, // 401 is an answer, not a failure worth retrying
   });
 
-  const onAuthenticated = (data: { user: User }) => {
-    queryClient.setQueryData(SESSION_KEY, { authenticated: true, user: data.user });
+  const onAuthenticated = (data: { user: User; github_connected?: boolean }) => {
+    queryClient.setQueryData(SESSION_KEY, {
+      authenticated: true,
+      user: data.user,
+      // Carry this through, or the UI would think GitHub is unlinked until the
+      // session query refetches.
+      github_connected: data.github_connected ?? false,
+    });
     // Cached workspace data belongs to whoever was signed in before.
     queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== "auth-session" });
   };

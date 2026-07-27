@@ -11,6 +11,23 @@ export function useRepositories() {
   });
 }
 
+/**
+ * Import repositories from GitHub. This is the "connect a repository" action:
+ * the backend pulls everything the installation can see and upserts it.
+ * Rejected for demo accounts, which hold no GitHub credential.
+ */
+export function useSyncRepositories() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => api.post<Repository[]>("/repositories/sync"),
+    onSuccess: (repositories) => {
+      queryClient.setQueryData(["repositories"], repositories);
+      queryClient.invalidateQueries({ queryKey: ["analytics"] });
+    },
+  });
+}
+
 export function useRepository(repositoryId: string) {
   return useQuery({
     queryKey: ["repositories", repositoryId],
