@@ -1,5 +1,24 @@
 <div align="center">
 
+# 🏥 RepoMedic
+
+### Diagnose Code. Repair Faster. Ship Confidently.
+
+Repository-aware AI code review that finds architectural, security, performance and
+reliability defects — and **proves every proposed fix works before you are asked to approve it**.
+
+**[Live app](https://repomedic-ten.vercel.app)** ·
+**[API](https://repomedic.onrender.com/api/v1/health)** ·
+**[API docs](https://repomedic.onrender.com/docs)** ·
+**[Deployment guide](DEPLOYMENT.md)**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-green.svg)](https://python.org)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-teal.svg)](https://fastapi.tiangolo.com)
+
+</div>
+
 ---
 
 ## Table of contents
@@ -515,6 +534,15 @@ npm run build       # production build
 ---
 
 ## Deployment
+
+This project is deployed at:
+
+| Service | URL |
+|---|---|
+| Frontend (Vercel) | <https://repomedic-ten.vercel.app> |
+| Backend (Render) | <https://repomedic.onrender.com> |
+| API base | `https://repomedic.onrender.com/api/v1` |
+| Database | Turso (libSQL over HTTP) |
 
 **📘 See [DEPLOYMENT.md](DEPLOYMENT.md)** for the full step-by-step guide — Vercel (frontend),
 Render (backend) and Turso (database), with an environment-variable reference, a
