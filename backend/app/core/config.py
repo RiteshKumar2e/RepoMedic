@@ -18,6 +18,24 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
+def _as_fernet_key(raw: str) -> str:
+    """Return a valid Fernet key for ``raw``.
+
+    Fernet only accepts urlsafe-base64 of exactly 32 bytes. A secret generated
+    the way JWT_SECRET is (``openssl rand -hex 32``) has the right entropy but
+    the wrong encoding, so derive a key from it instead of failing at the first
+    token write. Derivation is deterministic: the same secret always yields the
+    same key, so tokens already at rest stay readable.
+    """
+    candidate = raw.strip()
+    try:
+        if len(base64.urlsafe_b64decode(candidate)) == 32:
+            return candidate
+    except ValueError:  # not base64 at all
+        pass
+    return base64.urlsafe_b64encode(hashlib.sha256(candidate.encode()).digest()).decode()
+
+
 class SandboxMode(str, Enum):
     DOCKER = "docker"
     SUBPROCESS = "subprocess"
@@ -152,7 +170,7 @@ class Settings(BaseSettings):
     @property
     def effective_encryption_key(self) -> str:
         if self.encryption_key:
-            return self.encryption_key
+            return _as_fernet_key(self.encryption_key)
         if self.is_production:
             raise RuntimeError("ENCRYPTION_KEY must be set outside development")
         digest = hashlib.sha256(b"repomedic-development-encryption-key").digest()
