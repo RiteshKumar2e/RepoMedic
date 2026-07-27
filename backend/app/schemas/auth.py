@@ -81,7 +81,8 @@ class UserRead(BaseModel):
 
 
 class SessionResponse(BaseModel):
-    user: UserRead
+    # None when nobody is signed in — /auth/session answers that with 200.
+    user: UserRead | None = None
     authenticated: bool = True
     github_connected: bool = False
     token: str | None = None

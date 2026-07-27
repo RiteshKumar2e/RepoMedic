@@ -166,12 +166,28 @@ def test_logout_clears_the_session(client):
         "/api/v1/auth/register",
         json={"name": "Katherine", "email": email, "password": PASSWORD},
     )
-    assert client.get("/api/v1/auth/session").status_code == 200
+    assert client.get("/api/v1/auth/session").json()["authenticated"] is True
 
     assert client.post("/api/v1/auth/logout").status_code == 200
-    assert client.get("/api/v1/auth/session").status_code == 401
+    assert client.get("/api/v1/auth/session").json()["authenticated"] is False
 
 
-def test_session_requires_authentication(client):
+def test_session_reports_anonymous_callers_without_erroring(client):
+    """A public page asks who the visitor is; "nobody" is an answer, not a 401."""
     client.post("/api/v1/auth/logout")
-    assert client.get("/api/v1/auth/session").status_code == 401
+
+    response = client.get("/api/v1/auth/session")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["authenticated"] is False
+    assert body["user"] is None
+    assert body["github_connected"] is False
+
+
+def test_protected_endpoints_still_reject_anonymous_callers(client):
+    """Relaxing /auth/session must not relax anything that guards data."""
+    client.post("/api/v1/auth/logout")
+
+    for path in ("/api/v1/repositories", "/api/v1/dashboard"):
+        assert client.get(path).status_code == 401, path

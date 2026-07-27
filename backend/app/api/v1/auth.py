@@ -6,7 +6,7 @@ from fastapi import APIRouter, Query, Request, Response
 from fastapi.responses import RedirectResponse
 from sqlmodel import select
 
-from app.api.deps import CurrentUser, RateLimited, SessionDep, client_ip
+from app.api.deps import OptionalUser, RateLimited, SessionDep, client_ip
 from app.core.config import settings
 from app.core.errors import AuthenticationError, ConflictError
 from app.core.logging import get_logger
@@ -206,7 +206,18 @@ def demo_login(request: Request, response: Response, session: SessionDep) -> Ses
 
 
 @router.get("/session", response_model=SessionResponse, summary="Inspect the current session")
-def read_session(user: CurrentUser, session: SessionDep) -> SessionResponse:
+def read_session(user: OptionalUser, session: SessionDep) -> SessionResponse:
+    """Report who the caller is, if anyone.
+
+    This asks a question rather than guarding a resource, and "nobody is signed
+    in" is a valid answer — so it returns 200 with ``authenticated: false``
+    instead of 401. Every public page calls this on load; a 401 there is console
+    noise that hides real authentication failures. Protected endpoints still
+    reject anonymous callers.
+    """
+    if user is None:
+        return SessionResponse(user=None, authenticated=False)
+
     installation = session.exec(
         select(GitHubInstallation).where(GitHubInstallation.user_id == user.id)
     ).first()
