@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { Settings, Cpu, ShieldCheck, DollarSign, Save, Sliders, CheckCircle2 } from "lucide-react";
+
+import { Settings, Cpu, DollarSign, Save, Sliders } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 
 function SettingsPage() {

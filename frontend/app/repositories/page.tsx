@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FolderGit2, GitPullRequest, Star, Clock, ShieldCheck, ArrowRight } from "lucide-react";
+import { FolderGit2, GitPullRequest, Star, Clock, ArrowRight } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
@@ -14,21 +14,9 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 function RepositoriesPage() {
   const { data: repositories, isLoading } = useRepositories();
 
-  const repoList = repositories?.length
-    ? repositories
-    : [
-        {
-          id: "demo-repo-id",
-          full_name: "ecommerce-api-demo",
-          owner: "repomedic-demo",
-          name: "ecommerce-api-demo",
-          description: "E-Commerce REST API with payment, discount, and checkout routes",
-          primary_language: "Python",
-          open_pr_count: 1,
-          stars: 42,
-          last_analyzed_at: new Date().toISOString(),
-        },
-      ];
+  // Show what is actually connected. A placeholder repository used to render
+  // here while loading, which read as real data.
+  const repoList = repositories ?? [];
 
   return (
     <div className="min-h-screen bg-canvas flex text-ink">
@@ -43,6 +31,22 @@ function RepositoriesPage() {
               <p className="text-xs text-ink-muted mt-1">Manage scanned repositories and review configurations</p>
             </div>
           </div>
+
+          {isLoading && (
+            <p className="text-xs text-ink-subtle">Loading repositories…</p>
+          )}
+
+          {!isLoading && repoList.length === 0 && (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <p className="text-sm font-medium text-ink">No repositories connected yet</p>
+                <p className="mt-1 text-xs text-ink-muted">
+                  Connect your GitHub account from Settings, or sign in to the demo workspace to
+                  explore a seeded repository.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {repoList.map((repo) => (

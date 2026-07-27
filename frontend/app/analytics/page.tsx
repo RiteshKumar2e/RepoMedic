@@ -3,20 +3,37 @@
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { BarChart3, TrendingUp, ShieldAlert, CheckCircle2, Clock } from "lucide-react";
+
+import { BarChart3 } from "lucide-react";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { formatDuration } from "@/lib/utils";
+import type { Severity } from "@/types/api";
+
+const SEVERITY_BAR: Record<Severity, string> = {
+  critical: "bg-critical",
+  high: "bg-high",
+  medium: "bg-medium",
+  low: "bg-low",
+  informational: "bg-info",
+};
 
 function AnalyticsPage() {
-  const { data: analytics } = useAnalytics();
+  const { data: analytics, isLoading } = useAnalytics();
 
-  const categories = [
-    { name: "Security & Secrets", count: 3, percent: 43, color: "bg-critical" },
-    { name: "Performance (N+1, Async)", count: 2, percent: 29, color: "bg-medium" },
-    { name: "Architecture & Cycles", count: 1, percent: 14, color: "bg-accent" },
-    { name: "Missing Tests", count: 1, percent: 14, color: "bg-indigo-500" },
-  ];
+  const totalFindings = analytics?.total_findings ?? 0;
+  const severities = analytics?.findings_by_severity ?? [];
+  // Percentages are of the total, so an empty workspace renders empty bars
+  // rather than dividing by zero.
+  const breakdown = severities.map((entry) => ({
+    ...entry,
+    percent: totalFindings ? Math.round((entry.count / totalFindings) * 100) : 0,
+  }));
+  const severityCaption =
+    breakdown
+      .filter((entry) => entry.count > 0)
+      .map((entry) => `${entry.count} ${entry.severity}`)
+      .join(", ") || "No findings recorded yet";
 
   return (
     <div className="min-h-screen bg-canvas flex text-ink">
@@ -43,8 +60,12 @@ function AnalyticsPage() {
                 <CardDescription>Percentage of AI proposals approved</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="text-3xl font-extrabold text-success">100%</div>
-                <p className="text-xs text-ink-muted">3 of 3 proposed patches approved and merged</p>
+                <div className="text-3xl font-extrabold text-success">
+                  {Math.round(analytics?.fix_acceptance_rate ?? 0)}%
+                </div>
+                <p className="text-xs text-ink-muted">
+                  {analytics?.patches_pending_review ?? 0} patches still awaiting review
+                </p>
               </CardContent>
             </Card>
 
@@ -54,7 +75,9 @@ function AnalyticsPage() {
                 <CardDescription>Full pipeline execution time</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="text-3xl font-extrabold text-accent">4.2s</div>
+                <div className="text-3xl font-extrabold text-accent">
+                  {formatDuration(analytics?.average_review_seconds ?? 0)}
+                </div>
                 <p className="text-xs text-ink-muted">Deterministic scans + AST + Parallel AI agents</p>
               </CardContent>
             </Card>
@@ -65,32 +88,47 @@ function AnalyticsPage() {
                 <CardDescription>Across all open pull requests</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="text-3xl font-extrabold text-ink">7</div>
-                <p className="text-xs text-ink-muted">1 Critical, 2 High, 3 Medium, 1 Low</p>
+                <div className="text-3xl font-extrabold text-ink">{totalFindings}</div>
+                <p className="text-xs text-ink-muted">{severityCaption}</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Category Distribution */}
+          {/* Severity Distribution */}
           <Card>
             <CardHeader>
-              <CardTitle>Issues by Category</CardTitle>
-              <CardDescription>Breakdown of detected problems</CardDescription>
+              <CardTitle>Findings by Severity</CardTitle>
+              <CardDescription>Breakdown across every analysed pull request</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {categories.map((cat) => (
-                <div key={cat.name} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-ink font-medium">{cat.name}</span>
-                    <span className="font-mono text-ink-muted">
-                      {cat.count} ({cat.percent}%)
-                    </span>
+              {isLoading && (
+                <p className="text-xs text-ink-subtle">Loading analytics…</p>
+              )}
+
+              {!isLoading && totalFindings === 0 && (
+                <p className="text-xs text-ink-subtle">
+                  No findings yet. Run an analysis on a pull request to populate this report.
+                </p>
+              )}
+
+              {!isLoading &&
+                totalFindings > 0 &&
+                breakdown.map((entry) => (
+                  <div key={entry.severity} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium capitalize text-ink">{entry.severity}</span>
+                      <span className="font-mono text-ink-muted">
+                        {entry.count} ({entry.percent}%)
+                      </span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-inset">
+                      <div
+                        className={`h-full ${SEVERITY_BAR[entry.severity]}`}
+                        style={{ width: `${entry.percent}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-inset rounded-full h-2 overflow-hidden">
-                    <div className={`h-full ${cat.color}`} style={{ width: `${cat.percent}%` }} />
-                  </div>
-                </div>
-              ))}
+                ))}
             </CardContent>
           </Card>
         </main>

@@ -5,8 +5,8 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { GitFork, FileCode2, Layers, AlertTriangle, ArrowRight, ShieldCheck, Zap } from "lucide-react";
+
+import { GitFork, FileCode2, ShieldCheck } from "lucide-react";
 import { useRepositoryGraph } from "@/hooks/useGraph";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 
@@ -57,7 +57,7 @@ function ArchitectureGraphPage() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Module Dependency Canvas</CardTitle>
                 <Badge variant="outline" className="font-mono text-[10px]">
-                  5 Nodes • 4 Edges
+                  {nodes.length} Nodes • {edges.length} Edges
                 </Badge>
               </CardHeader>
               <CardContent className="flex-1 relative bg-canvas rounded-b-lg border-t border-line p-6 flex items-center justify-center">

@@ -47,17 +47,24 @@ async def main() -> int:
 
     from app.models.entities import Finding, Patch
 
+    # Read every attribute *inside* the session: once it closes the instances
+    # are detached and any lazy refresh raises DetachedInstanceError.
     with session_scope() as session:
         findings = list(session.exec(select(Finding).where(Finding.analysis_id == analysis_id)))
-        patches = list(
-            session.exec(select(Patch).where(Patch.finding_id.in_([f.id for f in findings])))
+        patch_count = len(
+            list(session.exec(select(Patch).where(Patch.finding_id.in_([f.id for f in findings]))))
         )
+        finding_count = len(findings)
+        top = [
+            (f.score, f.severity.value, f.file_path, f.start_line, f.title)
+            for f in sorted(findings, key=lambda f: f.score, reverse=True)[:10]
+        ]
 
     print(f"Seeded analysis {analysis_id}")
-    print(f"  findings: {len(findings)}")
-    print(f"  patches:  {len(patches)}")
-    for finding in sorted(findings, key=lambda f: f.score, reverse=True)[:10]:
-        print(f"    [{finding.severity.value:<13}] {finding.file_path}:{finding.start_line} — {finding.title[:60]}")
+    print(f"  findings: {finding_count}")
+    print(f"  patches:  {patch_count}")
+    for _score, severity, file_path, start_line, title in top:
+        print(f"    [{severity:<13}] {file_path}:{start_line} — {title[:60]}")
     return 0
 
 

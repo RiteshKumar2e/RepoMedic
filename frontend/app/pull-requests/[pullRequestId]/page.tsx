@@ -3,7 +3,7 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GitPullRequest, Play, CheckCircle2, AlertTriangle, ArrowRight, ShieldCheck } from "lucide-react";
+import { GitPullRequest, Play, ArrowRight } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";

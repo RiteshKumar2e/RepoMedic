@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { Severity, FindingCategory, FindingSource, RiskLevel } from "@/types/api";
+import type { Severity, FindingCategory } from "@/types/api";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

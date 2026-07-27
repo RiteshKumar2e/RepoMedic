@@ -1,7 +1,7 @@
 "use client";
 
-import { Search, Filter, ShieldAlert } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
+import { Search, Filter } from "lucide-react";
+
 import type { Severity } from "@/types/api";
 
 interface FilterBarProps {
@@ -54,6 +54,10 @@ export function FilterBar({
             </button>
           );
         })}
+
+        <span className="ml-2 border-l border-line pl-3 font-mono text-[10px] text-ink-muted">
+          {totalCount} {totalCount === 1 ? "finding" : "findings"}
+        </span>
       </div>
     </div>
   );

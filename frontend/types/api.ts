@@ -300,14 +300,75 @@ export interface KnowledgeGraphData {
   };
 }
 
-export interface AnalyticsSummary {
-  findings_by_severity: Record<string, number>;
-  findings_by_category: Record<string, number>;
+/* The shapes below mirror backend/app/schemas/analytics.py exactly. They used
+   to drift (`total_findings_count`, `average_analysis_duration`), which made
+   every field resolve to undefined and silently fall back to placeholders. */
+
+export interface SeverityCount {
+  severity: Severity;
+  count: number;
+}
+
+export interface CategoryCount {
+  category: string;
+  count: number;
+}
+
+export interface TrendPoint {
+  date: string;
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+  informational: number;
+  total: number;
+}
+
+export interface RiskyModule {
+  file_path: string;
+  finding_count: number;
+  max_severity: Severity;
+  score: number;
+}
+
+export interface ActivityItem {
+  id: string;
+  action: string;
+  entity_type: string;
+  entity_id?: string | null;
+  summary: string;
+  created_at: string;
+}
+
+/** GET /dashboard */
+export interface DashboardSummary {
+  repository_count: number;
+  open_pull_requests: number;
+  active_analyses: number;
+  total_findings: number;
+  findings_by_severity: SeverityCount[];
   fix_acceptance_rate: number;
-  average_analysis_duration: number;
-  total_analyses_count: number;
-  total_findings_count: number;
-  top_risky_modules: Array<{ file_path: string; count: number }>;
+  average_review_seconds: number;
+  patches_pending_review: number;
+  recent_activity: ActivityItem[];
+  trend: TrendPoint[];
+}
+
+/** GET /repositories/{id}/analytics */
+export interface RepositoryAnalytics {
+  repository_id: string;
+  analyses_run: number;
+  total_findings: number;
+  findings_by_severity: SeverityCount[];
+  findings_by_category: CategoryCount[];
+  findings_by_source: CategoryCount[];
+  fix_acceptance_rate: number;
+  average_review_seconds: number;
+  defect_trend: TrendPoint[];
+  riskiest_modules: RiskyModule[];
+  security_posture_score: number;
+  language_distribution: Record<string, number>;
+  total_estimated_cost: number;
 }
 
 export interface SSEProgressEvent {

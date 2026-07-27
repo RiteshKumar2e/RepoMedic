@@ -1,18 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  FolderGit2,
-  GitPullRequest,
-  ShieldAlert,
-  CheckCircle2,
-  Zap,
-  Clock,
-  Sparkles,
-  ArrowRight,
-  RefreshCw,
-  GitFork,
-} from "lucide-react";
+import { FolderGit2, GitPullRequest, ShieldAlert, CheckCircle2, Clock, Sparkles, ArrowRight, RefreshCw } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
@@ -21,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { useRepositories } from "@/hooks/useRepositories";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAuth } from "@/hooks/useAuth";
-import { formatDate, formatDuration, getSeverityBadgeColor } from "@/lib/utils";
+import { formatDuration, getSeverityBadgeColor } from "@/lib/utils";
 import type { Severity } from "@/types/api";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 
@@ -68,7 +57,7 @@ function DashboardPage() {
                 <div>
                   <p className="text-xs font-medium text-ink-muted">Connected Repositories</p>
                   <h3 className="text-2xl font-semibold text-ink mt-1">
-                    {repositories?.length || 1}
+                    {analytics?.repository_count ?? repositories?.length ?? 0}
                   </h3>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-accent-soft border border-accent-line flex items-center justify-center text-accent">
@@ -82,7 +71,7 @@ function DashboardPage() {
                 <div>
                   <p className="text-xs font-medium text-ink-muted">Total Findings</p>
                   <h3 className="text-2xl font-semibold text-ink mt-1">
-                    {analytics?.total_findings_count ?? 7}
+                    {analytics?.total_findings ?? 0}
                   </h3>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-medium-soft border border-medium-line flex items-center justify-center text-medium">
@@ -96,7 +85,7 @@ function DashboardPage() {
                 <div>
                   <p className="text-xs font-medium text-ink-muted">Fix Acceptance Rate</p>
                   <h3 className="text-2xl font-semibold text-ink mt-1">
-                    {analytics?.fix_acceptance_rate ?? 100}%
+                    {Math.round(analytics?.fix_acceptance_rate ?? 0)}%
                   </h3>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-success-soft border border-success-line flex items-center justify-center text-success">
@@ -110,7 +99,7 @@ function DashboardPage() {
                 <div>
                   <p className="text-xs font-medium text-ink-muted">Avg Analysis Duration</p>
                   <h3 className="text-2xl font-semibold text-ink mt-1">
-                    {formatDuration(analytics?.average_analysis_duration ?? 4.2)}
+                    {formatDuration(analytics?.average_review_seconds ?? 0)}
                   </h3>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">

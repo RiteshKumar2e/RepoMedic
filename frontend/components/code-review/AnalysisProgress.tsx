@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import type { SSEProgressEvent } from "@/types/api";
 
 interface AnalysisProgressProps {

@@ -1,25 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ShieldAlert,
-  Bug,
-  Zap,
-  GitFork,
-  Activity,
-  TestTube,
-  CheckCircle2,
-  XCircle,
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
-  ThumbsUp,
-  ThumbsDown,
-  ExternalLink,
-} from "lucide-react";
+import { CheckCircle2, Sparkles, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { getSeverityBadgeColor } from "@/lib/utils";
+
 import type { Finding, Patch } from "@/types/api";
 
 interface FindingCardProps {

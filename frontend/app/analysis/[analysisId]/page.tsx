@@ -9,11 +9,11 @@ import { FindingPanel } from "@/components/code-review/FindingPanel";
 import { FilterBar } from "@/components/code-review/FilterBar";
 import { AnalysisProgress } from "@/components/code-review/AnalysisProgress";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+
 import { useAnalysis } from "@/hooks/useAnalysis";
 import { useFindings } from "@/hooks/useFindings";
 import { usePatchActions } from "@/hooks/usePatches";
-import { Github, CheckCircle2, Sparkles, Send } from "lucide-react";
+import { Github, Send } from "lucide-react";
 import type { Finding, Severity } from "@/types/api";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 

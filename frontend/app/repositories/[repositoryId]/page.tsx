@@ -2,14 +2,14 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { FolderGit2, GitPullRequest, Settings, ArrowRight, Play, CheckCircle2 } from "lucide-react";
+import { FolderGit2, GitPullRequest, Settings, ArrowRight } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useRepository } from "@/hooks/useRepositories";
-import { usePullRequests, useTriggerAnalysis } from "@/hooks/usePullRequests";
+import { usePullRequests } from "@/hooks/usePullRequests";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 
 function RepositoryDetailPage({ params }: { params: Promise<{ repositoryId: string }> }) {
