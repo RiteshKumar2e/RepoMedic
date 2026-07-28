@@ -14,6 +14,7 @@ from app.api.deps import (
     CurrentUser,
     RateLimited,
     SessionDep,
+    StreamUser,
     load_analysis,
 )
 from app.core.errors import ValidationError
@@ -144,7 +145,7 @@ def get_analysis_graph(analysis_id: str, user: CurrentUser, session: SessionDep)
 
 
 @router.get("/{analysis_id}/events", summary="Server-Sent Events progress stream")
-async def stream_events(analysis_id: str, user: CurrentUser, session: SessionDep) -> StreamingResponse:
+async def stream_events(analysis_id: str, user: StreamUser, session: SessionDep) -> StreamingResponse:
     """Live pipeline progress.
 
     Replays everything already emitted, then streams new events until the

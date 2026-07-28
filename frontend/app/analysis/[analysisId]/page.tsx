@@ -16,6 +16,8 @@ import { usePatchActions } from "@/hooks/usePatches";
 import { Github, Send } from "lucide-react";
 import type { Finding, Severity } from "@/types/api";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { APIError } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
   const resolvedParams = use(params);
@@ -40,6 +42,8 @@ function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
     "informational",
   ]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const filteredFindings = useMemo(() => {
     return findingsList.filter((f) => {
@@ -80,6 +84,36 @@ function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
     setPickedFile(finding.file_path);
   };
 
+  // The fix-PR endpoint rejects a request with no approved patches, so the
+  // button reflects that instead of letting the call fail in the console.
+  const approvedCount = findingsList.reduce(
+    (total, finding) =>
+      total + (finding.patches ?? []).filter((patch) => patch.status === "approved").length,
+    0,
+  );
+
+  const runAction = async (action: () => Promise<unknown>, success: string) => {
+    setActionError(null);
+    setActionNotice(null);
+    try {
+      await action();
+      setActionNotice(success);
+    } catch (err) {
+      setActionError(
+        err instanceof APIError ? err.message : "The request failed. Please try again.",
+      );
+    }
+  };
+
+  const handlePublishReview = () =>
+    runAction(() => publishReview(analysisId), "Review posted to GitHub.");
+
+  const handleCreateFixPR = () =>
+    runAction(async () => {
+      const result = (await createFixPR({ id: analysisId })) as { pull_request_url?: string };
+      if (result?.pull_request_url) window.open(result.pull_request_url, "_blank", "noreferrer");
+    }, "Fix pull request opened on GitHub.");
+
   return (
     <div className="h-screen bg-canvas flex text-ink overflow-hidden">
       <Sidebar />
@@ -109,21 +143,43 @@ function AnalysisPage({ params }: { params: Promise<{ analysisId: string }> }) {
               size="sm"
               variant="outline"
               disabled={isPublishing}
-              onClick={() => publishReview(analysisId)}
+              onClick={handlePublishReview}
               className="gap-1.5 text-xs"
             >
               <Send className="w-3.5 h-3.5" /> Publish Review Comment
             </Button>
             <Button
               size="sm"
-              disabled={isCreatingPR}
-              onClick={() => createFixPR({ id: analysisId })}
+              disabled={isCreatingPR || approvedCount === 0}
+              onClick={handleCreateFixPR}
+              title={
+                approvedCount === 0
+                  ? "Approve at least one validated fix first"
+                  : `Open a pull request with ${approvedCount} approved patch(es)`
+              }
               className="gap-1.5 text-xs"
             >
-              <Github className="w-3.5 h-3.5" /> Create Fix Pull Request
+              <Github className="w-3.5 h-3.5" />
+              {approvedCount > 0
+                ? `Create Fix PR (${approvedCount})`
+                : "Create Fix Pull Request"}
             </Button>
           </div>
         </div>
+
+        {(actionError || actionNotice) && (
+          <div
+            role="status"
+            className={cn(
+              "border-b px-4 py-2 text-xs",
+              actionError
+                ? "border-critical-line bg-critical-soft text-critical"
+                : "border-success-line bg-success-soft text-success",
+            )}
+          >
+            {actionError ?? actionNotice}
+          </div>
+        )}
 
         {/* Main 3-Panel Code Review Workspace */}
         <div className="flex-1 flex min-h-0 overflow-hidden">

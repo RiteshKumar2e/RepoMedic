@@ -24,11 +24,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.core.config import settings  # noqa: E402
-from app.core.logging import configure_logging  # noqa: E402
-from app.core.security import hash_password  # noqa: E402
-from app.db.session import init_db, session_scope  # noqa: E402
-from app.schemas.auth import MIN_PASSWORD_LENGTH  # noqa: E402
+from app.core.config import settings
+from app.core.logging import configure_logging
+from app.core.security import hash_password
+from app.db.session import init_db, session_scope
+from app.schemas.auth import MIN_PASSWORD_LENGTH
 
 
 def _validate(password: str) -> str | None:
@@ -59,8 +59,8 @@ def main() -> int:
     configure_logging()
     init_db()
 
-    from app.services import auth as auth_service
     from app.models.entities import User, utcnow
+    from app.services import auth as auth_service
 
     email = args.email.strip().lower()
 

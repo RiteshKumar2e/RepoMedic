@@ -264,3 +264,40 @@ def test_protected_endpoints_still_reject_anonymous_callers(client):
 
     for path in ("/api/v1/repositories", "/api/v1/dashboard"):
         assert client.get(path).status_code == 401, path
+
+
+# --------------------------------------------------------------------------- #
+# SSE stream authentication
+#
+# EventSource cannot set headers, and cross-site the session cookie is a
+# third-party cookie browsers may block — so the stream route also accepts the
+# token as a query parameter.
+# --------------------------------------------------------------------------- #
+def test_event_stream_accepts_a_token_query_parameter(client, demo_analysis):
+    from app.core.config import settings
+    from app.db.session import session_scope
+    from app.services import auth as auth_service
+
+    with session_scope() as session:
+        user = auth_service.get_or_create_fixture_user(session)
+        token = auth_service.issue_session(user)
+
+    saved = dict(client.cookies)
+    client.cookies.clear()
+    try:
+        analysis_id = demo_analysis["analysis_id"]
+        # No cookie, no Authorization header — only the query parameter.
+        with client.stream("GET", f"/api/v1/analyses/{analysis_id}/events?token={token}") as r:
+            assert r.status_code == 200
+
+        with client.stream("GET", f"/api/v1/analyses/{analysis_id}/events") as r:
+            assert r.status_code == 401, "no credential at all must still be rejected"
+
+        with client.stream(
+            "GET", f"/api/v1/analyses/{analysis_id}/events?token=not-a-real-token"
+        ) as r:
+            assert r.status_code == 401, "a malformed token must be rejected"
+    finally:
+        for name, value in saved.items():
+            client.cookies.set(name, value)
+        assert settings.cookie_name  # keeps the import meaningful

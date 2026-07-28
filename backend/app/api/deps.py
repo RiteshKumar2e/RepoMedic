@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, Request
+from fastapi import Depends, Query, Request
 from sqlmodel import Session, select
 
 from app.core.config import settings
@@ -62,6 +62,42 @@ def get_optional_user(request: Request, session: SessionDep) -> User | None:
 
 
 OptionalUser = Annotated[User | None, Depends(get_optional_user)]
+
+
+def get_stream_user(
+    request: Request,
+    session: SessionDep,
+    token: str | None = Query(default=None, description="Session token for EventSource"),
+) -> User:
+    """Authenticate a Server-Sent Events connection.
+
+    ``EventSource`` cannot set request headers, so it can never send a bearer
+    token. Its only other credential is the session cookie — which, when the app
+    and the API are on different sites, is a third-party cookie that browsers
+    now block outright. Without this the stream is unauthenticated for every
+    split deployment.
+
+    Accepting the token in the query string is deliberately scoped to this one
+    route: query strings are recorded in access logs and proxy history, so it is
+    not something to generalise to the rest of the API.
+    """
+    if token:
+        try:
+            payload = decode_session_token(token)
+        except jwt.ExpiredSignatureError as exc:
+            raise AuthenticationError("Session expired") from exc
+        except jwt.PyJWTError as exc:
+            raise AuthenticationError("Invalid session token") from exc
+
+        user = session.get(User, payload["sub"])
+        if user is None:
+            raise AuthenticationError("Session user no longer exists")
+        return user
+
+    return get_current_user(request, session)
+
+
+StreamUser = Annotated[User, Depends(get_stream_user)]
 
 
 def get_admin_user(user: CurrentUser) -> User:

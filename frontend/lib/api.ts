@@ -98,10 +98,14 @@ export function subscribeToAnalysisEvents(
   onEvent: (event: SSEProgressEvent) => void,
   onError?: (err: Event) => void
 ): () => void {
-  // EventSource cannot set an Authorization header, so the session cookie is
-  // the only credential available — and cross-origin it is only sent with
-  // withCredentials. Without this the stream 401s.
-  const url = `${API_BASE}/analyses/${analysisId}/events`;
+  // EventSource cannot set an Authorization header. withCredentials sends the
+  // session cookie, but cross-site that is a third-party cookie which browsers
+  // may block outright — so the token is also passed in the query string, which
+  // the events route accepts for exactly this reason.
+  const token = getAuthToken();
+  const url =
+    `${API_BASE}/analyses/${analysisId}/events` +
+    (token ? `?token=${encodeURIComponent(token)}` : "");
   const eventSource = new EventSource(url, { withCredentials: true });
 
   eventSource.onmessage = (e) => {
