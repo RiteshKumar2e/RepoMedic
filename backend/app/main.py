@@ -19,6 +19,7 @@ from app.core.logging import configure_logging, get_logger
 from app.db.session import init_db
 from app.services import events
 from app.services.workspace import sweep_stale_workspaces
+from app.workers.tasks import recover_interrupted_analyses
 
 configure_logging()
 logger = get_logger(__name__)
@@ -43,6 +44,10 @@ async def lifespan(app: FastAPI):
     events.set_event_loop(asyncio.get_running_loop())
     init_db()
     sweep_stale_workspaces()
+    # Their workspaces were just swept, so anything still in flight from a
+    # previous process can never complete. Fail it rather than leave a scan
+    # stuck at "queued" forever.
+    recover_interrupted_analyses()
 
     # Fixture data is a development and test convenience. It must never appear
     # in a production database — there is no demo sign-in that could reach it,

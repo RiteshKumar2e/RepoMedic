@@ -139,3 +139,57 @@ def test_scan_endpoint_rejects_a_repository_the_caller_does_not_own(authed_clien
     response = authed_client.post("/api/v1/repositories/not-a-real-id/scan")
 
     assert response.status_code == 404
+
+
+# --------------------------------------------------------------------------- #
+# Restart recovery
+#
+# Analyses run in a daemon thread whose workspace is swept on boot, so anything
+# left QUEUED or RUNNING by a dead process can never finish. Left alone it shows
+# as a scan stuck forever and a knowledge graph that never appears.
+# --------------------------------------------------------------------------- #
+def test_interrupted_analyses_are_failed_on_startup(authed_client):
+    from app.db.session import session_scope
+    from app.models.entities import Analysis
+    from app.models.enums import AnalysisStatus
+    from app.workers.tasks import recover_interrupted_analyses
+
+    with session_scope() as session:
+        repository = _repository(session)
+        queued = create_scan(session, repository)
+        running = create_scan(session, repository)
+        running.status = AnalysisStatus.RUNNING
+        session.add(running)
+        session.commit()
+        queued_id, running_id = queued.id, running.id
+
+    recovered = recover_interrupted_analyses()
+
+    assert recovered >= 2
+    with session_scope() as session:
+        for analysis_id in (queued_id, running_id):
+            analysis = session.get(Analysis, analysis_id)
+            assert analysis.status is AnalysisStatus.FAILED
+            assert analysis.progress == 100
+            assert "restart" in (analysis.error_message or "").lower()
+
+
+def test_recovery_leaves_finished_analyses_alone(authed_client, demo_analysis):
+    """A completed analysis must keep its results and its graph."""
+    from app.db.session import session_scope
+    from app.models.entities import Analysis
+    from app.models.enums import AnalysisStatus
+    from app.workers.tasks import recover_interrupted_analyses
+
+    analysis_id = demo_analysis["analysis_id"]
+    with session_scope() as session:
+        before = session.get(Analysis, analysis_id)
+        assert before.status is AnalysisStatus.COMPLETED
+        snapshot = before.graph_snapshot
+
+    recover_interrupted_analyses()
+
+    with session_scope() as session:
+        after = session.get(Analysis, analysis_id)
+        assert after.status is AnalysisStatus.COMPLETED
+        assert after.graph_snapshot == snapshot
