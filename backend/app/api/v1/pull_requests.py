@@ -73,10 +73,10 @@ def list_analyses(
 )
 def analyze_pull_request(
     pull_request_id: str,
-    payload: AnalyzeRequest,
     request: Request,
     user: CurrentUser,
     session: SessionDep,
+    payload: AnalyzeRequest = AnalyzeRequest(),
 ) -> AnalysisRead:
     """Queue an analysis and return immediately.
 

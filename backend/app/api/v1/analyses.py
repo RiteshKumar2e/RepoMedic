@@ -213,10 +213,10 @@ def cancel(analysis_id: str, user: CurrentUser, session: SessionDep) -> Analysis
 )
 async def publish_review(
     analysis_id: str,
-    payload: PublishReviewRequest,
     request: Request,
     user: CurrentUser,
     session: SessionDep,
+    payload: PublishReviewRequest = PublishReviewRequest(),
 ) -> PublishReviewResponse:
     analysis = load_analysis(analysis_id, session, user)
     if analysis.status is not AnalysisStatus.COMPLETED and not payload.dry_run:
@@ -245,10 +245,10 @@ async def publish_review(
 )
 async def create_fix_pr(
     analysis_id: str,
-    payload: CreateFixPRRequest,
     request: Request,
     user: CurrentUser,
     session: SessionDep,
+    payload: CreateFixPRRequest = CreateFixPRRequest(),
 ) -> CreateFixPRResponse:
     analysis = load_analysis(analysis_id, session, user)
     if user.is_demo and not payload.dry_run:

@@ -201,10 +201,10 @@ def approve_patch(
 )
 def reject_patch(
     patch_id: str,
-    payload: RejectPatchRequest,
     request: Request,
     user: CurrentUser,
     session: SessionDep,
+    payload: RejectPatchRequest = RejectPatchRequest(),
 ) -> PatchDetail:
     patch = load_patch(patch_id, session, user)
     if patch.status is PatchStatus.APPLIED:

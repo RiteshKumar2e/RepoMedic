@@ -301,3 +301,29 @@ def test_event_stream_accepts_a_token_query_parameter(client, demo_analysis):
         for name, value in saved.items():
             client.cookies.set(name, value)
         assert settings.cookie_name  # keeps the import meaningful
+
+
+# --------------------------------------------------------------------------- #
+# Optional request bodies
+#
+# Every field on these payloads has a default, so a client that sends no body at
+# all is asking for the defaults — it must not be a 422. The frontend calls
+# publish-review with no body, which is how this was found.
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize(
+    "path_template",
+    [
+        "/api/v1/analyses/{analysis_id}/publish-review",
+        "/api/v1/analyses/{analysis_id}/create-fix-pr",
+    ],
+)
+def test_optional_bodies_are_not_required(authed_client, demo_analysis, path_template):
+    path = path_template.format(analysis_id=demo_analysis["analysis_id"])
+
+    response = authed_client.post(path)
+
+    # These routes may still refuse for a real reason (the fixture account
+    # cannot write to GitHub). What must not happen is a *schema* rejection:
+    # only FastAPI's body validation populates details.errors.
+    body_errors = response.json().get("error", {}).get("details", {}).get("errors", [])
+    assert not body_errors, f"request body was rejected as invalid: {body_errors}"
