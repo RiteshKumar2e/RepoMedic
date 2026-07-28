@@ -33,6 +33,11 @@ export function RepositorySelect({
     );
   }
 
+  const ordered = [...repositories].sort((a, b) => {
+    const analysed = Number(Boolean(b.last_analyzed_at)) - Number(Boolean(a.last_analyzed_at));
+    return analysed !== 0 ? analysed : a.full_name.localeCompare(b.full_name);
+  });
+
   return (
     <label className={cn("flex items-center gap-2", className)}>
       <span className="sr-only">Repository</span>
@@ -42,9 +47,12 @@ export function RepositorySelect({
         onChange={(event) => onChange(event.target.value)}
         className="h-8 max-w-[18rem] rounded-md border border-line bg-canvas px-2 text-[13px] text-ink transition-colors hover:border-ink-subtle focus:border-accent"
       >
-        {repositories.map((repository) => (
+        {/* Analysed repositories first: only those have a graph, and on an
+            account with dozens of repos the rest are noise here. */}
+        {ordered.map((repository) => (
           <option key={repository.id} value={repository.id}>
             {repository.full_name}
+            {repository.last_analyzed_at ? "" : "  (not analysed)"}
           </option>
         ))}
       </select>

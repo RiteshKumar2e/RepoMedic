@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
@@ -18,10 +19,13 @@ function ArchitectureGraphPage() {
   const [pickedRepository, setPickedRepository] = useState<string | null>(null);
   const [pickedNode, setPickedNode] = useState<string | null>(null);
 
-  // Both selections are derived rather than synced through an effect: fall back
-  // to the first available item until the user picks one. The page used to
-  // request a hardcoded "demo-repo-id", which always 404'd.
-  const repositoryId = pickedRepository ?? repositories?.[0]?.id ?? null;
+  // A graph only exists once a repository has been analysed, and most of a
+  // synced account has not been. Defaulting to repositories[0] therefore showed
+  // an empty canvas even when other repositories had a perfectly good graph.
+  const analysed = (repositories ?? []).filter((repo) => repo.last_analyzed_at);
+  const repositoryId =
+    pickedRepository ?? analysed[0]?.id ?? repositories?.[0]?.id ?? null;
+  const selectedRepository = repositories?.find((repo) => repo.id === repositoryId);
 
   const { data: graph, isLoading: graphLoading } = useRepositoryGraph(repositoryId ?? "");
 
@@ -100,10 +104,30 @@ function ArchitectureGraphPage() {
                   )}
 
                   {!graphLoading && nodes.length === 0 && (
-                    <p className="max-w-sm text-center text-xs text-ink-subtle">
-                      No graph yet for this repository. The graph is built during analysis — run one
-                      on a pull request to populate it.
-                    </p>
+                    <div className="max-w-sm space-y-3 text-center">
+                      <p className="text-xs text-ink-subtle">
+                        <span className="font-medium text-ink">
+                          {selectedRepository?.full_name ?? "This repository"}
+                        </span>{" "}
+                        has not been analysed yet, so it has no graph. The graph is built during
+                        analysis.
+                      </p>
+                      {analysed.length > 0 && (
+                        <p className="text-xs text-ink-subtle">
+                          {analysed.length} other{" "}
+                          {analysed.length === 1 ? "repository has" : "repositories have"} been
+                          analysed — pick one above.
+                        </p>
+                      )}
+                      {selectedRepository && (
+                        <Link
+                          href={`/repositories/${selectedRepository.id}`}
+                          className="inline-block text-xs font-medium text-accent hover:underline"
+                        >
+                          Scan {selectedRepository.name} now →
+                        </Link>
+                      )}
+                    </div>
                   )}
 
                   {!graphLoading && nodes.length > 0 && (
