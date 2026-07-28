@@ -34,6 +34,7 @@ from app.domain.types import (
 )
 from app.github import service as github_service
 from app.graph.builder import KnowledgeGraph, build_graph
+from app.graph.embeddings import GraphEmbedding, embed_graph
 from app.llm.base import UsageTracker
 from app.llm.registry import get_provider
 from app.models.entities import (
@@ -97,6 +98,7 @@ class AnalysisPipeline:
             budget_usd=min(self.settings_row.max_analysis_cost, settings.max_analysis_cost_usd)
         )
         self.graph: KnowledgeGraph | None = None
+        self.embedding: GraphEmbedding | None = None
         self._stage_started = time.perf_counter()
 
     @property
@@ -277,7 +279,11 @@ class AnalysisPipeline:
             changed_paths=set(context.changed_paths),
             dependencies=dependencies,
         )
-        self.analysis.graph_snapshot = self.graph.to_payload()
+
+        # Structural embeddings: k-hop graph convolution over node features,
+        # giving PageRank centrality and KNN neighbours for every node.
+        self.embedding = embed_graph(self.graph)
+        self.analysis.graph_snapshot = self.graph.to_payload(embedding=self.embedding)
 
         self._stage(AnalysisStage.RETRIEVING, "Selecting the most relevant repository context")
         bundle = build_context(context, self.graph)

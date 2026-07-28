@@ -101,6 +101,7 @@ consider.
 | **02** | **Parse**    | Python is parsed with the stdlib`ast`; JavaScript and TypeScript with tree-sitter. Symbols, imports and calls become a knowledge graph.                                                                                                                            |
 | **03** | **Scan**     | Ruff, Bandit, Mypy, ESLint, tsc, Semgrep, Gitleaks and OSV run — before any model. Output is normalised into one schema and deduplicated.                                                                                                                           |
 | **04** | **Retrieve** | Only the changed hunks plus graph-adjacent code are selected as context. The model never receives the whole repository.                                                                                                                                              |
+| **04b** | **Embed**   | Every node gets a feature vector (role, degree, edge mix, hashed identifier tokens), smoothed over 2 hops of graph convolution. PageRank ranks structural importance and KNN finds similar code. Pure Python, no extra dependencies. |
 | **05** | **Review**   | Five specialist agents (architecture, security, performance, reliability, testing) assess what deterministic tools cannot judge.                                                                                                                                     |
 | **06** | **Rank**     | Findings are merged, corroborated across sources, scored and ordered by severity and confidence.                                                                                                                                                                     |
 | **07** | **Patch**    | Fixes are generated AST-aware — modifying the syntax tree, not blind text replacement.                                                                                                                                                                              |
@@ -631,7 +632,12 @@ These are real constraints, not future work:
 - **No Alembic revisions.** Schema comes from `create_all` plus an additive-column step.
 - **Language coverage** is Python, JavaScript and TypeScript. Java, Go, Rust and C++ plug
   into the same analyzer interface but are not implemented.
-- **Retrieval uses local lexical similarity**, not a vector database.
+- **Graph learning is untrained.** Node embeddings use k-hop graph convolution
+  ([Simple Graph Convolution](https://arxiv.org/abs/1902.07153)) — the same propagation a
+  GCN or GraphSAGE layer performs at inference, but with no learned weights, because there is
+  no labelled corpus of code graphs to train on. It is deterministic and explainable, not a
+  trained neural network.
+- **Retrieval uses lexical similarity plus graph structure**, not a vector database.
 - **Test execution needs `SANDBOX_MODE=docker`** to be safe; `subprocess` mode runs tools on
   the host and should stay on trusted code.
 - **Webhooks need a public URL** — use ngrok locally.

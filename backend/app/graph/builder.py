@@ -184,13 +184,32 @@ class KnowledgeGraph:
         by_type["nodes"] = len(self.nodes)
         return dict(by_type)
 
-    def to_payload(self) -> dict:
+    def to_payload(self, *, embedding=None) -> dict:
+        """Serialise the graph.
+
+        When an embedding is supplied each node also carries its PageRank
+        centrality and nearest neighbours, so consumers get "how important is
+        this" and "what else looks like this" without recomputing anything.
+        """
+        centrality = embedding.centrality if embedding is not None else {}
+
+        def node_metrics(node: Node) -> dict:
+            metrics = dict(node.metrics)
+            if embedding is None:
+                return metrics
+            metrics["centrality"] = round(centrality.get(node.id, 0.0), 4)
+            metrics["similar"] = [
+                {"id": other, "score": round(score, 3)}
+                for other, score in embedding.similar(node.id, k=3)
+            ]
+            return metrics
+
         return {
             "nodes": [
                 {
                     "id": n.id, "label": n.label, "type": n.type, "file_path": n.file_path,
                     "language": n.language, "start_line": n.start_line, "end_line": n.end_line,
-                    "changed": n.changed, "metrics": n.metrics,
+                    "changed": n.changed, "metrics": node_metrics(n),
                 }
                 for n in self.nodes.values()
             ],
