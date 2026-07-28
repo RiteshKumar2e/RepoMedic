@@ -287,7 +287,7 @@ most:
 | `LOCAL_LLM_BASE_URL`                          | *(empty)*          | Any OpenAI-shaped server — Ollama, vLLM, LM Studio.                                                                  |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | *(empty)*          | Required for GitHub sign-in and repository import.                                                                    |
 | `GITHUB_WEBHOOK_SECRET`                       | *(empty)*          | Validates webhook signatures.                                                                                         |
-| `COOKIE_SAMESITE`                             | `lax`              | Use `none` when the app and API are on different sites — see [Deployment](#deployment).                          |
+| `COOKIE_SAMESITE`                             | `auto`             | Derived from whether `FRONTEND_URL` and `API_URL` are the same site. Override with `lax`/`none` only if needed.        |
 | `SANDBOX_MODE`                                | `subprocess`       | `docker`, `subprocess` or `disabled`. Use `docker` in production.                                             |
 | `MAX_ANALYSIS_COST_USD`                       | —                   | Hard budget cap per analysis.                                                                                         |
 | `REDIS_URL`                                   | *(empty)*          | Falls back to an in-process queue when absent.                                                                        |
@@ -574,7 +574,6 @@ FRONTEND_URL=https://repomedic-ten.vercel.app
 APP_URL=https://repomedic-ten.vercel.app
 
 COOKIE_SECURE=true
-COOKIE_SAMESITE=none
 COOKIE_DOMAIN=
 DEMO_MODE=false
 ```
@@ -584,12 +583,15 @@ exactly — scheme included, no trailing slash. If the GitHub OAuth app is used,
 URL is `https://repomedic.onrender.com/api/v1/auth/github/callback` — the **backend**, not the
 frontend.
 
-> **`COOKIE_SAMESITE=none` is required for the Vercel + Render split.** Those are different
-> sites, and a `SameSite=Lax` cookie is never sent cross-site. Normal API calls survive on the
-> bearer token, but `EventSource` cannot send headers — so the SSE progress stream
-> authenticates by cookie alone. Without this, sign-in works, the dashboard loads, and live
-> analysis progress silently stalls. Leave `COOKIE_DOMAIN` empty: `.vercel.app` and
-> `.onrender.com` are on the Public Suffix List, so browsers reject cookies scoped to them.
+> **Cross-site cookies are handled automatically.** `COOKIE_SAMESITE` defaults to `auto`,
+> which compares `FRONTEND_URL` and `API_URL`: a Vercel + Render split resolves to
+> `SameSite=None` (and forces `Secure`), while a shared parent domain keeps the stronger
+> `Lax`. This matters because a `Lax` cookie is never sent cross-site — GitHub OAuth would
+> complete, create the account, then redirect to an app that reads the session as anonymous
+> and bounces the user back to sign-in, forever.
+>
+> Leave `COOKIE_DOMAIN` empty on Vercel/Render: `.vercel.app` and `.onrender.com` are on the
+> Public Suffix List, so browsers reject cookies scoped to them.
 
 ---
 

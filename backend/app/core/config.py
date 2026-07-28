@@ -11,6 +11,7 @@ from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlparse
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -71,10 +72,12 @@ class Settings(BaseSettings):
     cookie_name: str = "repomedic_session"
     cookie_secure: bool = False
     cookie_domain: str = ""
-    # "lax" is right when the API and the app share a site. Split deployments
-    # (Vercel frontend + Render backend) are cross-site, where the browser drops
-    # a Lax cookie entirely — those need "none", which also forces Secure.
-    cookie_samesite: Literal["lax", "strict", "none"] = "lax"
+    # "auto" derives the value from whether the app and the API are same-site.
+    # Getting this wrong is silent and expensive: a Lax cookie is never sent
+    # cross-site, so a split deployment (Vercel app + Render API) authenticates
+    # every request as anonymous and bounces users straight back to /login.
+    # Set an explicit value to override the derivation.
+    cookie_samesite: Literal["auto", "lax", "strict", "none"] = "auto"
 
     # ---- GitHub ----------------------------------------------------------
     github_client_id: str = ""
@@ -132,6 +135,27 @@ class Settings(BaseSettings):
         """Strict allowlist — the browser origins permitted to call the API."""
         origins = {self.frontend_url, self.app_url}
         return sorted(o for o in origins if o)
+
+    @property
+    def is_cross_site(self) -> bool:
+        """True when the browser treats the app and the API as different sites.
+
+        Compares the registrable domain rather than the host, so
+        ``app.example.com`` and ``api.example.com`` stay same-site while
+        ``*.vercel.app`` and ``*.onrender.com`` do not.
+        """
+        app_host = urlparse(self.frontend_url).hostname or ""
+        api_host = urlparse(self.api_url).hostname or ""
+        if not app_host or not api_host or app_host == api_host:
+            return False
+        return app_host.split(".")[-2:] != api_host.split(".")[-2:]
+
+    @property
+    def effective_cookie_samesite(self) -> str:
+        """Resolve ``auto`` against the deployment topology."""
+        if self.cookie_samesite != "auto":
+            return self.cookie_samesite
+        return "none" if self.is_cross_site else "lax"
 
     @property
     def workspace_path(self) -> Path:

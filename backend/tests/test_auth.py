@@ -162,6 +162,75 @@ def test_demo_login_endpoint_no_longer_exists(client):
 
 
 # --------------------------------------------------------------------------- #
+# Cookie policy
+#
+# Getting SameSite wrong is silent: a Lax cookie is simply never sent
+# cross-site, so a split deployment authenticates every request as anonymous
+# and bounces users back to /login in a loop.
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize(
+    "frontend_url,api_url,expected",
+    [
+        # Split hosting on two public suffixes — must relax to None.
+        ("https://app.vercel.app", "https://api.onrender.com", "none"),
+        # Same registrable domain — Lax still works and is stronger.
+        ("https://app.example.com", "https://api.example.com", "lax"),
+        ("https://example.com", "https://example.com", "lax"),
+        # Local development.
+        ("http://localhost:3000", "http://localhost:8000", "lax"),
+    ],
+)
+def test_samesite_is_derived_from_deployment_topology(frontend_url, api_url, expected):
+    from app.core.config import Settings
+
+    # "auto" is passed explicitly: conftest pins COOKIE_SAMESITE in the
+    # environment, and pydantic-settings reads env vars even with _env_file=None.
+    settings = Settings(
+        _env_file=None,
+        frontend_url=frontend_url,
+        api_url=api_url,
+        cookie_samesite="auto",
+    )
+
+    assert settings.effective_cookie_samesite == expected
+
+
+def test_explicit_samesite_overrides_the_derivation():
+    from app.core.config import Settings
+
+    settings = Settings(
+        _env_file=None,
+        frontend_url="https://app.vercel.app",
+        api_url="https://api.onrender.com",
+        cookie_samesite="lax",
+    )
+
+    assert settings.effective_cookie_samesite == "lax"
+
+
+def test_samesite_none_forces_secure():
+    """Browsers reject SameSite=None without Secure, which would drop the session."""
+    from app.core.config import Settings
+    from app.services import auth as auth_service
+
+    original = auth_service.settings
+    auth_service.settings = Settings(
+        _env_file=None,
+        frontend_url="https://app.vercel.app",
+        api_url="https://api.onrender.com",
+        cookie_samesite="auto",
+        cookie_secure=False,
+    )
+    try:
+        kwargs = auth_service.cookie_kwargs()
+    finally:
+        auth_service.settings = original
+
+    assert kwargs["samesite"] == "none"
+    assert kwargs["secure"] is True
+
+
+# --------------------------------------------------------------------------- #
 # Session lifecycle
 # --------------------------------------------------------------------------- #
 def test_logout_clears_the_session(client):

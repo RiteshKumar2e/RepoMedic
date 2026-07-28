@@ -24,6 +24,13 @@ os.environ["REDIS_URL"] = ""
 os.environ["JWT_SECRET"] = "test-secret-not-used-in-production"
 os.environ["SANDBOX_MODE"] = "subprocess"
 os.environ["ALLOW_HOST_TEST_EXECUTION"] = "false"
+# Pinned, not inherited: TestClient speaks http://, so a developer running with
+# COOKIE_SAMESITE=none locally would force Secure and every session cookie would
+# be silently dropped.
+os.environ["COOKIE_SAMESITE"] = "lax"
+os.environ["COOKIE_SECURE"] = "false"
+os.environ["FRONTEND_URL"] = "http://localhost:3000"
+os.environ["API_URL"] = "http://localhost:8000"
 
 
 @pytest.fixture(scope="session")

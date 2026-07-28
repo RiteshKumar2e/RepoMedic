@@ -153,7 +153,7 @@ def issue_session(user: User) -> str:
 
 def cookie_kwargs() -> dict[str, Any]:
     """Hardened cookie attributes shared by login and logout."""
-    same_site = settings.cookie_samesite
+    same_site = settings.effective_cookie_samesite
     kwargs: dict[str, Any] = {
         "key": settings.cookie_name,
         "httponly": True,
