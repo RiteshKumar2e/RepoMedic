@@ -89,9 +89,40 @@ class SQLiteDialect_libsql_http(SQLiteDialect_pysqlite):  # noqa: N801
 
     @classmethod
     def get_pool_class(cls, url: Any) -> Any:
-        from sqlalchemy.pool import QueuePool
+        """Never reuse a connection.
 
-        return QueuePool
+        Turso's HTTP transport keeps server-side *streams* that expire after a
+        few seconds of inactivity. A pooled connection therefore rots between
+        uses: the analysis pipeline clones a repository for several seconds and
+        the next query fails with ``stream not found``. NullPool opens a fresh
+        connection per checkout, which is the only safe option against a remote
+        database with expiring session state.
+        """
+        from sqlalchemy.pool import NullPool
+
+        return NullPool
+
+    def is_disconnect(self, e: Exception, connection: Any, cursor: Any) -> bool:
+        """Recognise an expired stream as a disconnect.
+
+        ``libsql`` raises a bare ``ValueError`` for this, which SQLAlchemy would
+        otherwise treat as a genuine application error and propagate. Reporting
+        it as a disconnect lets pool pre-ping discard the connection and retry
+        transparently instead of failing the request.
+        """
+        message = str(e).lower()
+        if any(
+            marker in message
+            for marker in ("stream not found", "stream expired", "baton", "hrana")
+        ):
+            return True
+        try:
+            return super().is_disconnect(e, connection, cursor)
+        except Exception:
+            # This runs while handling another exception; raising here would
+            # replace the real error with a confusing one. Not-a-disconnect is
+            # the safe answer.
+            return False
 
     def create_connect_args(self, url: Any) -> tuple[list[Any], dict[str, Any]]:
         """Turn ``sqlite+libsql_http://host?authToken=…`` into libsql arguments."""
