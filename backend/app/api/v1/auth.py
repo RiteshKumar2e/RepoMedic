@@ -92,9 +92,21 @@ async def github_callback(
         ip_address=client_ip(request),
     )
 
-    response = RedirectResponse(url=f"{settings.frontend_url}{redirect_path}", status_code=302)
+    token = auth_service.issue_session(user)
+
+    # The token also travels back in the URL *fragment*, not only the cookie.
+    # When the app and the API are on different sites the session cookie is a
+    # third-party cookie, and browsers increasingly refuse those outright — so
+    # OAuth would sign the user in and then hand them a session they cannot
+    # use. A fragment is never sent to a server and never appears in a Referer
+    # header, and the app strips it from the URL as soon as it is read.
+    redirect_url = f"{settings.frontend_url}{redirect_path}"
+    if settings.is_cross_site:
+        redirect_url = f"{redirect_url}#session={token}"
+
+    response = RedirectResponse(url=redirect_url, status_code=302)
     response.set_cookie(
-        value=auth_service.issue_session(user),
+        value=token,
         max_age=settings.jwt_expire_minutes * 60,
         **auth_service.cookie_kwargs(),
     )

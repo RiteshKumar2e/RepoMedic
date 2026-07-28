@@ -34,6 +34,31 @@ function persistSession(data: AuthenticatedResponse): AuthenticatedResponse {
   return data;
 }
 
+/**
+ * Pick up a session handed back by the GitHub OAuth redirect.
+ *
+ * The backend appends `#session=<token>` when the app and the API are on
+ * different sites, because there the session cookie is a third-party cookie and
+ * browsers may block it entirely. Storing the token means later requests
+ * authenticate with an `Authorization` header, which nothing blocks.
+ *
+ * The fragment is removed from the address bar immediately so the token is not
+ * left sitting in a URL the user might copy or bookmark.
+ */
+export function consumeSessionFromUrl(): boolean {
+  if (typeof window === "undefined") return false;
+
+  const hash = window.location.hash;
+  if (!hash.startsWith("#")) return false;
+
+  const token = new URLSearchParams(hash.slice(1)).get("session");
+  if (!token) return false;
+
+  setAuthToken(token);
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  return true;
+}
+
 export async function getCurrentSession(): Promise<SessionResponse> {
   try {
     return await api.get<SessionResponse>("/auth/session");
