@@ -43,7 +43,9 @@ export function Header() {
   const handleSignOut = async () => {
     setMenuOpen(false);
     await logout();
-    router.replace("/login");
+    // Land on the public landing page, not the sign-in form — signing out is
+    // usually "I'm done", not "let me sign in as someone else".
+    router.replace("/");
   };
 
   const displayName = user?.name || user?.login || "Developer";
