@@ -5,12 +5,14 @@ export interface SessionResponse {
   authenticated: boolean;
   user: User | null;
   github_connected?: boolean;
+  is_admin?: boolean;
 }
 
 interface AuthenticatedResponse {
   authenticated: boolean;
   user: User;
   github_connected?: boolean;
+  is_admin?: boolean;
   token?: string;
 }
 

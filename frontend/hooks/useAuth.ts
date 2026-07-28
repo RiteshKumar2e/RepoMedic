@@ -16,13 +16,18 @@ export function useAuth() {
     retry: false, // 401 is an answer, not a failure worth retrying
   });
 
-  const onAuthenticated = (data: { user: User; github_connected?: boolean }) => {
+  const onAuthenticated = (data: {
+    user: User;
+    github_connected?: boolean;
+    is_admin?: boolean;
+  }) => {
     queryClient.setQueryData(SESSION_KEY, {
       authenticated: true,
       user: data.user,
-      // Carry this through, or the UI would think GitHub is unlinked until the
-      // session query refetches.
+      // Carry these through, or the UI would think GitHub is unlinked and the
+      // admin link would stay hidden until the session query refetches.
       github_connected: data.github_connected ?? false,
+      is_admin: data.is_admin ?? false,
     });
     // Cached workspace data belongs to whoever was signed in before.
     queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== "auth-session" });
@@ -47,6 +52,7 @@ export function useAuth() {
     isAuthenticated: sessionQuery.data?.authenticated ?? false,
     isLoading: sessionQuery.isLoading,
     githubConnected: sessionQuery.data?.github_connected ?? false,
+    isAdmin: sessionQuery.data?.is_admin ?? false,
 
     register: registerMutation.mutateAsync,
     isRegistering: registerMutation.isPending,

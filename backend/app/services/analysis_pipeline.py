@@ -72,6 +72,9 @@ logger = get_logger(__name__)
 MAX_PATCHES_PER_ANALYSIS = 12
 MAX_FILES_TO_PARSE = 1200
 
+# Marks an analysis as a whole-repository scan rather than a pull-request review.
+REPOSITORY_SCAN_TRIGGER = "repository_scan"
+
 
 @dataclass
 class PipelineResult:
@@ -95,6 +98,15 @@ class AnalysisPipeline:
         )
         self.graph: KnowledgeGraph | None = None
         self._stage_started = time.perf_counter()
+
+    @property
+    def is_full_scan(self) -> bool:
+        """A whole-repository scan rather than a review of one pull request.
+
+        Every downstream stage keys off ``context.changes``, so a scan simply
+        declares the entire tree as changed instead of a diff.
+        """
+        return self.analysis.triggered_by == REPOSITORY_SCAN_TRIGGER
 
     # ---- progress --------------------------------------------------------
     def _stage(self, stage: AnalysisStage, message: str, **extra) -> None:
@@ -124,11 +136,15 @@ class AnalysisPipeline:
         self.session.add(self.analysis)
         self.session.commit()
 
+        started_message = (
+            f"Scanning {self.repository.full_name}"
+            if self.is_full_scan
+            else f"Analysing PR #{self.pull_request.github_pr_number}"
+        )
         events.publish(
             self.analysis.id,
             "started",
-            {"stage": AnalysisStage.QUEUED.value, "progress": 0,
-             "message": f"Analysing PR #{self.pull_request.github_pr_number}"},
+            {"stage": AnalysisStage.QUEUED.value, "progress": 0, "message": started_message},
         )
 
         try:
@@ -201,8 +217,12 @@ class AnalysisPipeline:
             head_ref=self.pull_request.head_ref,
         )
 
-        self._stage(AnalysisStage.DIFFING, "Computing changed files and diffs")
-        changes = await self._collect_changes(token)
+        if self.is_full_scan:
+            self._stage(AnalysisStage.DIFFING, "Scanning the whole repository")
+            changes = []
+        else:
+            self._stage(AnalysisStage.DIFFING, "Computing changed files and diffs")
+            changes = await self._collect_changes(token)
 
         self._stage(AnalysisStage.DETECTING, "Detecting languages and frameworks")
         excluded = list(self.settings_row.excluded_paths or [])
@@ -211,6 +231,14 @@ class AnalysisPipeline:
             self.workspace, excluded_paths=excluded, max_files=MAX_FILES_TO_PARSE
         ):
             files[source_file.path] = source_file
+
+        if self.is_full_scan:
+            # No diff exists, so every analysable file counts as in scope. This
+            # has to happen after enumeration, which is what knows the tree.
+            changes = [
+                FileChange(path=path, status="modified", patch="", changed_lines=set())
+                for path in files
+            ]
 
         languages = detection.detect_languages(files.values())
         dependencies = detection.read_dependencies(self.workspace.root)
@@ -782,8 +810,14 @@ def _build_summary(findings: list[UnifiedFinding], repository: str, pr: PullRequ
     else:
         verdict = "**No issues found** by the configured reviewers and scanners."
 
+    # A repository scan has no pull-request number to cite.
+    heading = (
+        f"## RepoMedic repository scan — {repository}"
+        if not pr.github_pr_number
+        else f"## RepoMedic review — {repository}#{pr.github_pr_number}"
+    )
     lines = [
-        f"## RepoMedic review — {repository}#{pr.github_pr_number}",
+        heading,
         "",
         verdict,
         "",

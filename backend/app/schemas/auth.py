@@ -85,4 +85,6 @@ class SessionResponse(BaseModel):
     user: UserRead | None = None
     authenticated: bool = True
     github_connected: bool = False
+    # Derived from the ADMIN_EMAILS allowlist, never stored on the user row.
+    is_admin: bool = False
     token: str | None = None

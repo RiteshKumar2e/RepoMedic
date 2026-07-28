@@ -64,6 +64,22 @@ def get_optional_user(request: Request, session: SessionDep) -> User | None:
 OptionalUser = Annotated[User | None, Depends(get_optional_user)]
 
 
+def get_admin_user(user: CurrentUser) -> User:
+    """Gate the cross-tenant admin views.
+
+    Admin is granted by the ADMIN_EMAILS allowlist rather than a database flag,
+    so access is revoked by editing configuration and cannot be escalated by
+    anything a user is able to change about their own account. An empty
+    allowlist denies everyone.
+    """
+    if not settings.is_admin_email(user.email):
+        raise AuthorizationError("Administrator access is required")
+    return user
+
+
+AdminUser = Annotated[User, Depends(get_admin_user)]
+
+
 def rate_limiter(request: Request) -> None:
     identity = request.client.host if request.client else "anonymous"
     token = _extract_token(request)

@@ -14,6 +14,12 @@ from app.models.entities import (
 )
 from app.models.enums import PullRequestStatus
 
+# The pull-request number reserved for the synthetic target that whole-repository
+# scans attach to. Real pull requests are numbered from 1, so 0 cannot collide.
+# It lives here rather than in services/repository_scan.py to avoid an import
+# cycle: repositories → repository_scan → analysis_pipeline → repositories.
+SCAN_PR_NUMBER = 0
+
 
 def installations_for_user(session: Session, user: User) -> list[GitHubInstallation]:
     return list(
@@ -37,7 +43,12 @@ def list_repositories(session: Session, user: User) -> list[Repository]:
 def list_pull_requests(
     session: Session, repository: Repository, status: PullRequestStatus | None = None
 ) -> list[PullRequest]:
-    statement = select(PullRequest).where(PullRequest.repository_id == repository.id)
+    statement = select(PullRequest).where(
+        PullRequest.repository_id == repository.id,
+        # Number 0 is the synthetic target that whole-repository scans hang
+        # from. It is not a real pull request and must never be listed as one.
+        PullRequest.github_pr_number != SCAN_PR_NUMBER,
+    )
     if status:
         statement = statement.where(PullRequest.status == status)
     return list(session.exec(statement.order_by(PullRequest.updated_at.desc())))

@@ -287,6 +287,7 @@ most:
 | `LOCAL_LLM_BASE_URL`                          | *(empty)*          | Any OpenAI-shaped server — Ollama, vLLM, LM Studio.                                                                  |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | *(empty)*          | Required for GitHub sign-in and repository import.                                                                    |
 | `GITHUB_WEBHOOK_SECRET`                       | *(empty)*          | Validates webhook signatures.                                                                                         |
+| `ADMIN_EMAILS`                                | *(empty)*          | Comma-separated addresses granted the `/admin` dashboard. Empty means nobody.                                          |
 | `COOKIE_SAMESITE`                             | `auto`             | Derived from whether `FRONTEND_URL` and `API_URL` are the same site. Override with `lax`/`none` only if needed.        |
 | `SANDBOX_MODE`                                | `subprocess`       | `docker`, `subprocess` or `disabled`. Use `docker` in production.                                             |
 | `MAX_ANALYSIS_COST_USD`                       | —                   | Hard budget cap per analysis.                                                                                         |
@@ -472,6 +473,7 @@ Full interactive documentation at `http://localhost:8000/docs`.
 | `GET`  | `/api/v1/repositories/{id}`                     | Repository detail               |
 | `GET`  | `/api/v1/repositories/{id}/pull-requests`       | List pull requests              |
 | `POST` | `/api/v1/repositories/{id}/pull-requests/sync`  | Re-sync pull requests           |
+| `POST` | `/api/v1/repositories/{id}/scan`                | Scan the whole default branch   |
 | `GET`  | `/api/v1/repositories/{id}/settings` · `PUT` | Read / update review settings   |
 | `GET`  | `/api/v1/pull-requests/{id}`                    | Pull-request detail             |
 | `GET`  | `/api/v1/pull-requests/{id}/analyses`           | Analysis history                |
@@ -503,6 +505,7 @@ Full interactive documentation at `http://localhost:8000/docs`.
 | `GET`  | `/api/v1/dashboard`                      | Workspace-wide summary                            |
 | `GET`  | `/api/v1/capabilities`                   | Which scanners and providers are usable right now |
 | `GET`  | `/api/v1/health`                         | Health check                                      |
+| `GET`  | `/api/v1/admin/overview`                 | System-wide data + audit log (admin only)         |
 | `POST` | `/api/v1/webhooks/github`                | GitHub webhook receiver                           |
 
 ---

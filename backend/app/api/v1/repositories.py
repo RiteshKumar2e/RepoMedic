@@ -2,21 +2,23 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query, Request, status
 
 from app.api.deps import CurrentUser, RateLimited, SessionDep, client_ip, load_repository
-from app.core.errors import AuthenticationError
+from app.core.errors import AuthenticationError, ConflictError
 from app.core.logging import get_logger
 from app.github import service as github_service
 from app.models.enums import PullRequestStatus
+from app.schemas.analysis import AnalysisRead
 from app.schemas.repository import (
     PullRequestRead,
     RepositoryRead,
     RepositorySettingsRead,
     RepositorySettingsUpdate,
 )
-from app.services import audit
+from app.services import audit, repository_scan
 from app.services import repositories as repo_service
+from app.workers.queue import enqueue_analysis
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/repositories", tags=["repositories"])
@@ -50,6 +52,50 @@ async def sync_repositories(
         ip_address=client_ip(request),
     )
     return [RepositoryRead.model_validate(r) for r in rows]
+
+
+@router.post(
+    "/{repository_id}/scan",
+    response_model=AnalysisRead,
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[RateLimited],
+    summary="Scan the whole repository and propose fixes",
+)
+def scan_repository(
+    repository_id: str,
+    request: Request,
+    user: CurrentUser,
+    session: SessionDep,
+    force: bool = Query(default=False, description="Queue even if a scan is already running"),
+) -> AnalysisRead:
+    """Review the default branch rather than a pull request.
+
+    Returns immediately; progress streams from ``GET /analyses/{id}/events``.
+    Approved patches can then be opened as a pull request through
+    ``POST /analyses/{id}/create-fix-pr``.
+    """
+    repo = load_repository(repository_id, session, user)
+
+    running = repository_scan.latest_scan(session, repo)
+    if repository_scan.is_scan_running(running) and not force:
+        raise ConflictError(
+            "A scan is already running for this repository",
+            details={"analysis_id": running.id, "status": running.status.value},
+        )
+
+    analysis = repository_scan.create_scan(session, repo)
+    backend = enqueue_analysis(analysis.id)
+
+    audit.record(
+        session,
+        action="scan.started",
+        entity_type="analysis",
+        entity_id=analysis.id,
+        user_id=user.id,
+        metadata={"target": repo.full_name, "queue": backend},
+        ip_address=client_ip(request),
+    )
+    return AnalysisRead.model_validate(analysis)
 
 
 @router.get("/{repository_id}", response_model=RepositoryRead, summary="Repository detail")

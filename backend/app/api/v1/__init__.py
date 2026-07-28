@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    admin,
     analyses,
     analytics,
     auth,
@@ -26,5 +27,6 @@ api_router.include_router(patches.router)
 api_router.include_router(graph.router)
 api_router.include_router(analytics.router)
 api_router.include_router(webhooks.router)
+api_router.include_router(admin.router)
 
 __all__ = ["api_router"]

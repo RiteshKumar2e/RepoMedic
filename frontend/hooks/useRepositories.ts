@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { Repository, RepositorySettings } from "@/types/api";
+import type { Analysis, Repository, RepositorySettings } from "@/types/api";
 
 export function useRepositories() {
   return useQuery({
@@ -23,6 +23,23 @@ export function useSyncRepositories() {
     mutationFn: () => api.post<Repository[]>("/repositories/sync"),
     onSuccess: (repositories) => {
       queryClient.setQueryData(["repositories"], repositories);
+      queryClient.invalidateQueries({ queryKey: ["analytics"] });
+    },
+  });
+}
+
+/**
+ * Scan a whole repository's default branch rather than a single pull request.
+ * Returns the queued analysis; progress streams from its SSE endpoint.
+ */
+export function useScanRepository(repositoryId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (options?: { force?: boolean }) =>
+      api.post<Analysis>(`/repositories/${repositoryId}/scan?force=${options?.force ?? false}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["repositories", repositoryId] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
     },
   });

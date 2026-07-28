@@ -8,9 +8,11 @@ import {
   GitFork,
   LayoutDashboard,
   Settings,
+  ShieldCheck,
   Stethoscope,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -20,8 +22,15 @@ const navItems = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
+const ADMIN_ITEM = { name: "Admin", href: "/admin", icon: ShieldCheck };
+
 export function Sidebar() {
   const pathname = usePathname();
+  const { isAdmin } = useAuth();
+
+  // Hiding the link is convenience, not security — the API enforces the
+  // allowlist on every admin request regardless of what the nav shows.
+  const items = isAdmin ? [...navItems, ADMIN_ITEM] : navItems;
 
   return (
     <aside className="sticky top-0 z-30 flex h-screen w-60 shrink-0 flex-col border-r border-line bg-surface">
@@ -35,7 +44,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2">
-        {navItems.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
           return (

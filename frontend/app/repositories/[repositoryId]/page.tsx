@@ -1,22 +1,47 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
-import { FolderGit2, GitPullRequest, Settings, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  FolderGit2,
+  GitPullRequest,
+  Settings,
+  ArrowRight,
+  ScanSearch,
+  Loader2,
+} from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { useRepository } from "@/hooks/useRepositories";
+import { useRepository, useScanRepository } from "@/hooks/useRepositories";
+import { APIError } from "@/lib/api";
 import { usePullRequests } from "@/hooks/usePullRequests";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 
 function RepositoryDetailPage({ params }: { params: Promise<{ repositoryId: string }> }) {
   const resolvedParams = use(params);
   const repoId = resolvedParams.repositoryId;
+  const router = useRouter();
   const { data: repo } = useRepository(repoId);
   const { data: pullRequests, isLoading: prsLoading } = usePullRequests(repoId);
+  const scan = useScanRepository(repoId);
+  const [scanError, setScanError] = useState<string | null>(null);
+
+  const handleScan = async () => {
+    setScanError(null);
+    try {
+      // Land on the live review workspace so progress is visible immediately.
+      const analysis = await scan.mutateAsync({ force: false });
+      router.push(`/analysis/${analysis.id}`);
+    } catch (err) {
+      setScanError(
+        err instanceof APIError ? err.message : "Could not start the scan. Please try again.",
+      );
+    }
+  };
 
   // Only real pull requests. A fabricated one used to render here, and opening
   // it requested /pull-requests/demo-pr-id, which 404'd.
@@ -44,12 +69,34 @@ function RepositoryDetailPage({ params }: { params: Promise<{ repositoryId: stri
               {repo?.description && <p className="text-xs text-ink-muted">{repo.description}</p>}
             </div>
 
-            <Link href="/settings">
-              <Button size="sm" variant="outline" className="gap-1.5">
-                <Settings className="w-3.5 h-3.5" /> Repository Settings
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                onClick={handleScan}
+                disabled={scan.isPending}
+                className="gap-1.5"
+                title="Analyse the default branch and propose fixes"
+              >
+                {scan.isPending ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <ScanSearch className="w-3.5 h-3.5" />
+                )}
+                {scan.isPending ? "Starting scan…" : "Scan repository"}
               </Button>
-            </Link>
+              <Link href="/settings">
+                <Button size="sm" variant="outline" className="gap-1.5">
+                  <Settings className="w-3.5 h-3.5" /> Repository Settings
+                </Button>
+              </Link>
+            </div>
           </div>
+
+          {scanError && (
+            <p role="alert" className="text-xs text-critical">
+              {scanError}
+            </p>
+          )}
 
           {/* Pull Requests Table */}
           <Card>

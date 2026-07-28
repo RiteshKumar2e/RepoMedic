@@ -408,3 +408,90 @@ export interface SSEProgressEvent {
   file?: string;
   error?: string;
 }
+
+/* ---------------------------------------------------------------------------
+   Admin — mirrors backend/app/schemas/admin.py. Metadata only: the API never
+   returns repository source, tokens or password hashes here.
+   ------------------------------------------------------------------------- */
+
+export interface AdminTotals {
+  users: number;
+  repositories: number;
+  analyses: number;
+  findings: number;
+  patches: number;
+  pull_requests: number;
+}
+
+export type AuthMethod = "github" | "password" | "none" | "unknown";
+
+export interface AdminUserRow {
+  id: string;
+  login?: string | null;
+  name?: string | null;
+  email?: string | null;
+  avatar_url?: string | null;
+  auth_method: AuthMethod;
+  github_connected: boolean;
+  repository_count: number;
+  analysis_count: number;
+  is_admin: boolean;
+  created_at: string;
+}
+
+export interface AdminRepositoryRow {
+  id: string;
+  full_name: string;
+  owner_login?: string | null;
+  owner_email?: string | null;
+  primary_language?: string | null;
+  is_private: boolean;
+  open_pr_count: number;
+  analysis_count: number;
+  finding_count: number;
+  last_analyzed_at?: string | null;
+  created_at: string;
+}
+
+export interface AdminAnalysisRow {
+  id: string;
+  repository_full_name?: string | null;
+  pull_request_number?: number | null;
+  status: AnalysisStatus;
+  stage: string;
+  triggered_by: string;
+  finding_count: number;
+  duration_seconds?: number | null;
+  estimated_cost: number;
+  created_at: string;
+}
+
+export interface AdminFindingStats {
+  total: number;
+  by_severity: SeverityCount[];
+  by_category: CategoryCount[];
+  patches_proposed: number;
+  patches_approved: number;
+  patches_rejected: number;
+  fix_acceptance_rate: number;
+}
+
+export interface AdminAuditRow {
+  id: string;
+  action: string;
+  entity_type: string;
+  entity_id?: string | null;
+  actor_login?: string | null;
+  actor_email?: string | null;
+  ip_address?: string | null;
+  created_at: string;
+}
+
+export interface AdminOverview {
+  totals: AdminTotals;
+  users: AdminUserRow[];
+  repositories: AdminRepositoryRow[];
+  analyses: AdminAnalysisRow[];
+  findings: AdminFindingStats;
+  audit: AdminAuditRow[];
+}

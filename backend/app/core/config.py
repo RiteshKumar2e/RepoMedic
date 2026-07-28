@@ -79,6 +79,12 @@ class Settings(BaseSettings):
     # Set an explicit value to override the derivation.
     cookie_samesite: Literal["auto", "lax", "strict", "none"] = "auto"
 
+    # ---- Administration --------------------------------------------------
+    # Comma-separated addresses allowed to read the cross-tenant admin views.
+    # Empty means nobody is an admin, which is the safe default: the endpoints
+    # exist but reject everyone until an operator opts in.
+    admin_emails: str = ""
+
     # ---- GitHub ----------------------------------------------------------
     github_client_id: str = ""
     github_client_secret: str = ""
@@ -135,6 +141,20 @@ class Settings(BaseSettings):
         """Strict allowlist — the browser origins permitted to call the API."""
         origins = {self.frontend_url, self.app_url}
         return sorted(o for o in origins if o)
+
+    @property
+    def admin_email_list(self) -> set[str]:
+        """Normalised admin allowlist. Comparison is case-insensitive."""
+        return {
+            entry.strip().lower()
+            for entry in self.admin_emails.split(",")
+            if entry.strip()
+        }
+
+    def is_admin_email(self, email: str | None) -> bool:
+        if not email:
+            return False
+        return email.strip().lower() in self.admin_email_list
 
     @property
     def is_cross_site(self) -> bool:

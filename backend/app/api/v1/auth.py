@@ -145,7 +145,10 @@ def register(
         ip_address=client_ip(request),
     )
     return SessionResponse(
-        user=UserRead.model_validate(user), github_connected=False, token=token
+        user=UserRead.model_validate(user),
+        github_connected=False,
+        is_admin=settings.is_admin_email(user.email),
+        token=token,
     )
 
 
@@ -184,6 +187,7 @@ def login(
     return SessionResponse(
         user=UserRead.model_validate(user),
         github_connected=bool(installation and installation.encrypted_access_token),
+        is_admin=settings.is_admin_email(user.email),
         token=token,
     )
 
@@ -207,6 +211,7 @@ def read_session(user: OptionalUser, session: SessionDep) -> SessionResponse:
     return SessionResponse(
         user=UserRead.model_validate(user),
         github_connected=bool(installation and installation.encrypted_access_token),
+        is_admin=settings.is_admin_email(user.email),
     )
 
 
