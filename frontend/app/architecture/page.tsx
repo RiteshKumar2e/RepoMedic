@@ -7,12 +7,14 @@ import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
-import { GitFork, FileCode2, ShieldCheck } from "lucide-react";
+import { GitFork, ShieldCheck } from "lucide-react";
 import { useRepositoryGraph } from "@/hooks/useGraph";
 import { useRepositories } from "@/hooks/useRepositories";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { RepositorySelect } from "@/components/repositories/RepositorySelect";
 import { ConnectRepositories } from "@/components/repositories/ConnectRepositories";
+import { KnowledgeGraphCanvas } from "@/components/graph/KnowledgeGraphCanvas";
+import { cn } from "@/lib/utils";
 
 function ArchitectureGraphPage() {
   const { data: repositories, isLoading: reposLoading } = useRepositories();
@@ -91,14 +93,22 @@ function ArchitectureGraphPage() {
           {hasRepositories && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Interactive Graph Display */}
-              <Card className="lg:col-span-2 min-h-[500px] flex flex-col">
+              <Card className="lg:col-span-2 min-h-[620px] flex flex-col">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Module Dependency Canvas</CardTitle>
                   <Badge variant="outline" className="font-mono text-[10px]">
                     {nodes.length} Nodes • {edges.length} Edges
                   </Badge>
                 </CardHeader>
-                <CardContent className="flex-1 relative bg-canvas rounded-b-lg border-t border-line p-6 flex items-center justify-center">
+                <CardContent
+                  className={cn(
+                    "flex-1 relative bg-canvas rounded-b-lg border-t border-line",
+                    // The canvas fills the card; the placeholder states are centred.
+                    nodes.length > 0 && !graphLoading
+                      ? "p-0"
+                      : "p-6 flex items-center justify-center",
+                  )}
+                >
                   {graphLoading && (
                     <p className="text-xs text-ink-subtle">Loading knowledge graph…</p>
                   )}
@@ -131,37 +141,12 @@ function ArchitectureGraphPage() {
                   )}
 
                   {!graphLoading && nodes.length > 0 && (
-                    <div className="w-full max-w-lg space-y-6">
-                      {nodes.map((node) => {
-                        const isSelected = selectedNode === node.id;
-                        return (
-                          <div
-                            key={node.id}
-                            onClick={() => setPickedNode(node.id)}
-                            className={`p-4 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${
-                              isSelected
-                                ? "bg-accent-soft border-accent-line text-accent shadow-sm shadow-sky-500/10"
-                                : node.changed
-                                ? "bg-medium-soft border-medium-line text-medium"
-                                : "bg-surface border-line text-ink hover:border-line"
-                            }`}
-                          >
-                            <div className="flex items-center space-x-3">
-                              <FileCode2 className="w-5 h-5 text-accent" />
-                              <div>
-                                <span className="font-mono text-xs font-semibold">{node.label}</span>
-                                <span className="text-[10px] block text-ink-muted capitalize">
-                                  Type: {node.type}
-                                  {node.finding_count > 0 && ` • ${node.finding_count} findings`}
-                                </span>
-                              </div>
-                            </div>
-
-                            {node.changed && <Badge variant="high">Modified in PR</Badge>}
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <KnowledgeGraphCanvas
+                      nodes={nodes}
+                      edges={edges}
+                      selectedId={selectedNode}
+                      onSelect={setPickedNode}
+                    />
                   )}
                 </CardContent>
               </Card>
