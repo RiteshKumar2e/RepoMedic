@@ -32,12 +32,24 @@ export interface Layout {
   edges: LaidOutEdge[];
   width: number;
   height: number;
+  /** Actual extent of the laid-out content, for the SVG viewBox.
+   *
+   * Spacing labels apart can push nodes past the nominal canvas, and a fixed
+   * viewBox would simply clip them. Reporting the real bounds lets the SVG
+   * scale to whatever the layout needed instead. */
+  viewBox: { x: number; y: number; width: number; height: number };
 }
 
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-/** Gap left between circles so the label underneath each stays legible. */
+/** Vertical breathing room between a circle and the one below it. */
 const LABEL_PADDING = 16;
+
+/* Labels sit under each circle and are far wider than they are tall, so
+   collision has to be elliptical. Treating nodes as circles separates them just
+   enough for the dots and leaves the text overlapping into a smear. */
+const LABEL_CHAR_WIDTH = 5.4; // ≈ 10px monospace
+const MAX_LABEL_CHARS = 22; // matches the truncation in the renderer
 
 /** Node radius scales with centrality — important modules read as bigger. */
 function radiusFor(node: GraphNode, isFocus: boolean): number {
@@ -46,8 +58,52 @@ function radiusFor(node: GraphNode, isFocus: boolean): number {
   return isFocus ? base + 7 : base;
 }
 
-/** Separate any pair of circles closer than their radii plus label room. */
+/** Half-width of a node's rendered label, floored at the circle itself. */
+function labelHalfWidth(node: LaidOutNode): number {
+  const chars = Math.min(node.node.label.length, MAX_LABEL_CHARS);
+  return Math.max(node.radius, (chars * LABEL_CHAR_WIDTH) / 2);
+}
+
+/**
+ * Separate overlapping nodes, treating each as an ellipse wide enough for its
+ * label. Correction is applied along the axis with the smaller overlap, so
+ * nodes slide sideways when text collides but stay vertically compact.
+ */
 function resolveCollisions(placed: LaidOutNode[]): void {
+  for (let i = 0; i < placed.length; i++) {
+    for (let j = i + 1; j < placed.length; j++) {
+      const a = placed[i];
+      const b = placed[j];
+
+      const minX = labelHalfWidth(a) + labelHalfWidth(b) + 8;
+      const minY = a.radius + b.radius + LABEL_PADDING;
+
+      const gapX = Math.abs(b.x - a.x);
+      const gapY = Math.abs(b.y - a.y);
+
+      // Boxes clear of each other on either axis cannot overlap.
+      if (gapX >= minX || gapY >= minY) continue;
+
+      const overlapX = minX - gapX;
+      const overlapY = minY - gapY;
+
+      if (overlapX < overlapY) {
+        const push = overlapX / 2;
+        const dir = b.x >= a.x ? 1 : -1;
+        a.x -= dir * push;
+        b.x += dir * push;
+      } else {
+        const push = overlapY / 2;
+        const dir = b.y >= a.y ? 1 : -1;
+        a.y -= dir * push;
+        b.y += dir * push;
+      }
+    }
+  }
+}
+
+/** Radial fallback kept for the pre-scale passes, where only dots matter. */
+function resolveCircleCollisions(placed: LaidOutNode[]): void {
   for (let i = 0; i < placed.length; i++) {
     for (let j = i + 1; j < placed.length; j++) {
       const a = placed[i];
@@ -66,6 +122,49 @@ function resolveCollisions(placed: LaidOutNode[]): void {
       b.y += ny * push;
     }
   }
+}
+
+/** Bounding box covering every circle and its label, never smaller than the canvas. */
+function contentBounds(
+  placed: LaidOutNode[],
+  width: number,
+  height: number,
+): { x: number; y: number; width: number; height: number } {
+  if (placed.length === 0) return { x: 0, y: 0, width, height };
+
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  for (const p of placed) {
+    const halfWidth = labelHalfWidth(p);
+    minX = Math.min(minX, p.x - halfWidth);
+    maxX = Math.max(maxX, p.x + halfWidth);
+    minY = Math.min(minY, p.y - p.radius);
+    // Labels hang below the circle.
+    maxY = Math.max(maxY, p.y + p.radius + 18);
+  }
+
+  const pad = 24;
+  minX -= pad;
+  maxX += pad;
+  minY -= pad;
+  maxY += pad;
+
+  // Never zoom in past the nominal canvas: a three-node graph blown up to full
+  // bleed looks broken.
+  const boxWidth = Math.max(width, maxX - minX);
+  const boxHeight = Math.max(height, maxY - minY);
+  const centreX = (minX + maxX) / 2;
+  const centreY = (minY + maxY) / 2;
+
+  return {
+    x: centreX - boxWidth / 2,
+    y: centreY - boxHeight / 2,
+    width: boxWidth,
+    height: boxHeight,
+  };
 }
 
 export function layoutGraph(
@@ -165,8 +264,10 @@ export function layoutGraph(
       p.y += velocities[i].vy;
     }
 
-    // Repulsion alone is radius-blind, so large nodes still overlap.
-    resolveCollisions(placed);
+    // Repulsion alone is radius-blind, so large nodes still overlap. During the
+    // simulation only the circles matter; label spacing is settled after the
+    // final scale, when positions stop moving.
+    resolveCircleCollisions(placed);
 
     if (focus) {
       focus.x = centreX;
@@ -208,8 +309,9 @@ export function layoutGraph(
   }
 
   // Scaling positions while holding radii fixed can reintroduce overlap, so
-  // settle collisions again at the final size.
-  for (let pass = 0; pass < 12; pass++) {
+  // settle again at the final size — this time accounting for label width,
+  // which is what actually has to be readable.
+  for (let pass = 0; pass < 30; pass++) {
     resolveCollisions(placed);
   }
 
@@ -223,5 +325,11 @@ export function layoutGraph(
     }
   }
 
-  return { nodes: placed, edges: links, width, height };
+  return {
+    nodes: placed,
+    edges: links,
+    width,
+    height,
+    viewBox: contentBounds(placed, width, height),
+  };
 }
