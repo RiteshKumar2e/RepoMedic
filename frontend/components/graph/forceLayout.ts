@@ -49,12 +49,15 @@ const LABEL_PADDING = 16;
    collision has to be elliptical. Treating nodes as circles separates them just
    enough for the dots and leaves the text overlapping into a smear. */
 const LABEL_CHAR_WIDTH = 5.4; // ≈ 10px monospace
-const MAX_LABEL_CHARS = 22; // matches the truncation in the renderer
+export const MAX_LABEL_CHARS = 18; // matches the truncation in the renderer
 
-/** Node radius scales with centrality — important modules read as bigger. */
+/** Node radius scales with centrality — important modules read as bigger.
+ *
+ * The floor is set by the text that sits *inside* the circle: a `:Type` caption
+ * of nine characters at 7px needs roughly 19px of half-width to clear the edge. */
 function radiusFor(node: GraphNode, isFocus: boolean): number {
   const centrality = Number(node.metrics?.centrality ?? 0);
-  const base = 13 + centrality * 11;
+  const base = 21 + centrality * 9;
   return isFocus ? base + 7 : base;
 }
 
@@ -124,6 +127,27 @@ function resolveCircleCollisions(placed: LaidOutNode[]): void {
   }
 }
 
+/**
+ * Round coordinates before they leave the layout.
+ *
+ * `Math.sin`, `Math.cos` and friends are implementation-defined in JS, so the
+ * V8 that renders on the server and the V8 in the browser can disagree in the
+ * last couple of bits. That is invisible on screen but not to React, which
+ * compares the two `viewBox` strings during hydration and reports a mismatch.
+ * Two decimals is far finer than a pixel and identical on both sides.
+ */
+function quantise(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function quantiseLayout(placed: LaidOutNode[]): void {
+  for (const p of placed) {
+    p.x = quantise(p.x);
+    p.y = quantise(p.y);
+    p.radius = quantise(p.radius);
+  }
+}
+
 /** Bounding box covering every circle and its label, never smaller than the canvas. */
 function contentBounds(
   placed: LaidOutNode[],
@@ -149,7 +173,9 @@ function contentBounds(
   const pad = 24;
   minX -= pad;
   maxX += pad;
-  minY -= pad;
+  // The query caption floats over the top of the canvas, so reserve enough
+  // headroom that it does not land on top of the outermost node.
+  minY -= pad + 34;
   maxY += pad;
 
   // Never zoom in past the nominal canvas: a three-node graph blown up to full
@@ -160,10 +186,200 @@ function contentBounds(
   const centreY = (minY + maxY) / 2;
 
   return {
-    x: centreX - boxWidth / 2,
-    y: centreY - boxHeight / 2,
-    width: boxWidth,
-    height: boxHeight,
+    x: quantise(centreX - boxWidth / 2),
+    y: quantise(centreY - boxHeight / 2),
+    width: quantise(boxWidth),
+    height: quantise(boxHeight),
+  };
+}
+
+/** Minimum clearance between one ring of nodes and the next one out. */
+const RING_GAP = 116;
+
+/** Builds the undirected adjacency used by the hop-based layout. */
+function adjacencyOf(links: LaidOutEdge[], ids: string[]): Map<string, Set<string>> {
+  const adjacency = new Map<string, Set<string>>();
+  for (const id of ids) adjacency.set(id, new Set());
+  for (const link of links) {
+    adjacency.get(link.source.node.id)?.add(link.target.node.id);
+    adjacency.get(link.target.node.id)?.add(link.source.node.id);
+  }
+  return adjacency;
+}
+
+/**
+ * Hub-and-spoke layout: the focus node sits at the centre and everything else
+ * is placed on a ring per hop distance, the way a Neo4j browser renders a
+ * `(t)-[r*1..2]-(n)` expansion.
+ *
+ * A settled force layout answers "what does this repository look like"; this
+ * answers "what does *this* node touch", which is the question the canvas is
+ * actually being used for once a node is selected. Reading a hop count off a
+ * ring is immediate, whereas in a spring layout it has to be traced by eye.
+ *
+ * Ring radius comes from how much arc the nodes on it need, so a hub with
+ * thirty neighbours pushes its ring out rather than overlapping labels. Angles
+ * are inherited from a node's parents on the inner ring, which keeps each
+ * subtree in its own wedge and stops edges crossing the hub.
+ */
+export function hubLayout(
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+  options: { width: number; height: number; focusId: string },
+): Layout {
+  const { width, height, focusId } = options;
+  const centreX = width / 2;
+  const centreY = height / 2;
+
+  const placed: LaidOutNode[] = nodes.map((node) => ({
+    node,
+    x: centreX,
+    y: centreY,
+    radius: radiusFor(node, node.id === focusId),
+  }));
+  const byId = new Map(placed.map((p) => [p.node.id, p]));
+
+  const links = edges
+    .map((edge) => ({
+      edge,
+      source: byId.get(edge.source),
+      target: byId.get(edge.target),
+    }))
+    .filter((l): l is LaidOutEdge => Boolean(l.source && l.target));
+
+  const adjacency = adjacencyOf(links, nodes.map((n) => n.id));
+
+  // ---- hop distance from the focus ------------------------------------
+  const hops = new Map<string, number>();
+  hops.set(focusId, 0);
+  let frontier = [focusId];
+  let depth = 0;
+  while (frontier.length > 0) {
+    depth += 1;
+    const next: string[] = [];
+    for (const id of frontier) {
+      for (const neighbour of adjacency.get(id) ?? []) {
+        if (hops.has(neighbour)) continue;
+        hops.set(neighbour, depth);
+        next.push(neighbour);
+      }
+    }
+    frontier = next;
+  }
+
+  // Nodes with no path to the focus still have to go somewhere; one ring
+  // beyond the connected component reads correctly as "not reachable from
+  // here" without hiding them.
+  const reachableDepth = Math.max(0, ...hops.values());
+  const orphanRing = reachableDepth + 1;
+  for (const p of placed) {
+    if (!hops.has(p.node.id)) hops.set(p.node.id, orphanRing);
+  }
+
+  const rings = new Map<number, LaidOutNode[]>();
+  for (const p of placed) {
+    const hop = hops.get(p.node.id) ?? orphanRing;
+    if (hop === 0) continue;
+    const ring = rings.get(hop);
+    if (ring) ring.push(p);
+    else rings.set(hop, [p]);
+  }
+
+  const focus = byId.get(focusId);
+  const angles = new Map<string, number>([[focusId, 0]]);
+  let innerRadius = (focus?.radius ?? 24) + 30;
+
+  const ringNumbers = [...rings.keys()].sort((a, b) => a - b);
+  for (const hop of ringNumbers) {
+    const ring = rings.get(hop) ?? [];
+
+    // Preferred angle: the circular mean of whichever parents are already
+    // placed, so a node lands in the same direction as what it hangs off.
+    const preferred = ring.map((p, index) => {
+      let sinSum = 0;
+      let cosSum = 0;
+      let parents = 0;
+      for (const neighbour of adjacency.get(p.node.id) ?? []) {
+        const parentAngle = angles.get(neighbour);
+        const parentHop = hops.get(neighbour) ?? 0;
+        // The hub is at the centre, so it has no direction to inherit — the
+        // first ring would otherwise collapse onto a single bearing.
+        if (parentAngle === undefined || parentHop === 0 || parentHop >= hop) continue;
+        sinSum += Math.sin(parentAngle);
+        cosSum += Math.cos(parentAngle);
+        parents += 1;
+      }
+      // No placed parent (the first ring, or orphans) — fall back to an even
+      // deterministic spread.
+      const angle = parents === 0 ? index * GOLDEN_ANGLE : Math.atan2(sinSum, cosSum);
+      return { placedNode: p, angle: ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) };
+    });
+    preferred.sort((a, b) => a.angle - b.angle);
+
+    // Each node needs its own label's worth of arc, so a ring of long file
+    // names simply sits further out instead of smearing text together.
+    const arcs = preferred.map((entry) =>
+      Math.max(72, labelHalfWidth(entry.placedNode) * 2 + 14),
+    );
+    const radius = Math.max(
+      innerRadius + RING_GAP,
+      arcs.reduce((total, arc) => total + arc, 0) / (Math.PI * 2),
+    );
+
+    // Spread the ring by pushing crowded neighbours apart rather than
+    // distributing evenly: even spacing looks tidy but drags a node away from
+    // the parent it hangs off, which is what draws the long edges across the
+    // middle of the picture. Relaxation only moves what actually collides, so
+    // a full ring still ends up evenly spaced.
+    const widths = arcs.map((arc) => arc / radius);
+    for (let pass = 0; pass < 60; pass++) {
+      for (let i = 0; i < preferred.length; i++) {
+        const j = (i + 1) % preferred.length;
+        if (i === j) break; // single node on this ring
+        const wrapped = j === 0;
+        const gap =
+          preferred[j].angle - preferred[i].angle + (wrapped ? Math.PI * 2 : 0);
+        const wanted = (widths[i] + widths[j]) / 2;
+        if (gap >= wanted) continue;
+        const push = (wanted - gap) / 2;
+        preferred[i].angle -= push;
+        preferred[j].angle += push;
+      }
+    }
+
+    for (const entry of preferred) {
+      const { angle } = entry;
+      angles.set(entry.placedNode.node.id, angle);
+      entry.placedNode.x = centreX + Math.cos(angle) * radius;
+      entry.placedNode.y = centreY + Math.sin(angle) * radius;
+    }
+
+    innerRadius = radius;
+  }
+
+  if (focus) {
+    focus.x = centreX;
+    focus.y = centreY;
+  }
+
+  // Even arc spacing keeps a ring clear of itself, but two rings can still
+  // collide where a wide label on the inner ring reaches outwards.
+  for (let pass = 0; pass < 24; pass++) {
+    resolveCollisions(placed);
+    if (focus) {
+      focus.x = centreX;
+      focus.y = centreY;
+    }
+  }
+
+  quantiseLayout(placed);
+
+  return {
+    nodes: placed,
+    edges: links,
+    width,
+    height,
+    viewBox: contentBounds(placed, width, height),
   };
 }
 
@@ -200,8 +416,16 @@ export function layoutGraph(
   // The focus node is pinned at the centre so the view always has an anchor.
   const focus = focusId ? byId.get(focusId) : undefined;
 
+  // Ideal spring length. The canvas-area term alone goes below a node diameter
+  // once the graph is dense, which asks the simulation for a spacing the
+  // circles physically cannot hold, so floor it against the nodes themselves.
   const area = width * height;
-  const ideal = Math.sqrt(area / Math.max(1, placed.length)) * 0.62;
+  const meanRadius =
+    placed.reduce((total, p) => total + p.radius, 0) / Math.max(1, placed.length);
+  const ideal = Math.max(
+    Math.sqrt(area / Math.max(1, placed.length)) * 0.62,
+    meanRadius * 2.6,
+  );
   const velocities = placed.map(() => ({ vx: 0, vy: 0 }));
 
   for (let step = 0; step < iterations; step++) {
@@ -310,8 +534,10 @@ export function layoutGraph(
 
   // Scaling positions while holding radii fixed can reintroduce overlap, so
   // settle again at the final size — this time accounting for label width,
-  // which is what actually has to be readable.
-  for (let pass = 0; pass < 30; pass++) {
+  // which is what actually has to be readable. Each pass only nudges a
+  // colliding pair halfway apart, so a crowded graph needs a good number of
+  // them: at 30 a 70-node canvas still finished with circles overlapping.
+  for (let pass = 0; pass < 80; pass++) {
     resolveCollisions(placed);
   }
 
@@ -324,6 +550,8 @@ export function layoutGraph(
       p.y += dy;
     }
   }
+
+  quantiseLayout(placed);
 
   return {
     nodes: placed,
